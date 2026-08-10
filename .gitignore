@@ -1,0 +1,16 @@
+# 依赖与构建产物
+node_modules/
+dist/
+*.tsbuildinfo
+
+# 环境与系统
+.env
+.env.local
+.DS_Store
+Thumbs.db
+.lingxi
+
+# 日志与运行时
+*.log
+runtime/
+.run

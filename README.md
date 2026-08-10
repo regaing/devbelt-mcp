@@ -1,12 +1,28 @@
-# devbelt-mcp
+<div align="center">
 
-AI 工具 MCP server，提供 **53 个在线工具**（编码/加解密/代码格式化/JSON/文本/单位换算/网络查询/二维码等），以标准 MCP（Model Context Protocol）工具形式提供给 LLM 调用。
+# 🧰 devbelt-mcp
 
-- **语言/运行时**：TypeScript + Node.js ≥ 18
-- **协议**：MCP stdio（本地直连桌面客户端）
-- **零数据库**：无状态纯工具服务
+**AI 工具 MCP server —— 53 个在线工具，供 LLM 直接调用**
 
-## 快速开始
+![npm version](https://img.shields.io/npm/v/@lingxi-agent/devbelt-mcp?color=cb3837&label=npm)
+![license](https://img.shields.io/badge/license-MIT-brightgreen)
+![language](https://img.shields.io/badge/language-TypeScript-3178c6)
+![node](https://img.shields.io/badge/node-%3E%3D18-339933)
+![mcp](https://img.shields.io/badge/MCP-stdio-8b5cf6)
+![tools](https://img.shields.io/badge/tools-53-4fc3f7)
+![tests](https://img.shields.io/badge/tests-63%20passing-2ea44f)
+
+</div>
+
+## ✨ 特性
+
+- 🚀 **53 个在线工具**：编码转换 / 加解密 / 代码格式化 / JSON / 文本处理 / 单位换算 / 网络查询 / 二维码
+- 🧩 **现代加密标准**：AES-GCM/CBC（`node:crypto`），无历史算法残留
+- ⚡ **stdio 直连**：本地运行、零数据库、无状态
+- 🛡️ **统一错误处理**：异常自动转为可读文本，不抛裸堆栈
+- ✅ **63 个端到端测试**：InMemoryTransport 连接真实 server，含 golden 回归
+
+## 🚀 快速开始
 
 ```bash
 npm install
@@ -15,7 +31,33 @@ npm test             # 运行 63 个端到端测试
 node dist/index.js   # 启动 stdio server
 ```
 
-### 客户端接入（LingXi / Claude Desktop 等）
+### 调用示例
+
+```json
+{
+  "mcpServers": {
+    "devbelt-mcp": {
+      "command": "npx",
+      "args": ["-y", "@lingxi-agent/devbelt-mcp"]
+    }
+  }
+}
+```
+
+接入后 LLM 可直接调用，例如：
+
+```
+crypto_hash(text: "abc", algorithm: "md5")
+  → 900150983cd24fb0d6963f7d28e17f72
+
+unit_convert(category: "temperature", value: 100, from: "C", to: "F")
+  → 100 C = 212 F（温度换算）
+
+net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: true)
+  → ✓ 连接成功 / → 发送：hello / ← 收到：hello / ✓ 收到 pong / ◼ 连接关闭
+```
+
+## 📦 客户端接入（LingXi / Claude Desktop 等）
 
 **方式一：npx（推荐）**
 
@@ -43,7 +85,7 @@ node dist/index.js   # 启动 stdio server
 }
 ```
 
-## 工具清单（53 个）
+## 🧰 工具清单（53 个）
 
 ### 编码转换 `encode_*`（7）
 | 工具 | 功能 |
@@ -102,14 +144,14 @@ node dist/index.js   # 启动 stdio server
 ### 其他 `misc_*`（5）
 `misc_barcode`（条形码）、`misc_qrcode`（二维码）、`misc_favicon`（PNG→ICO）、`misc_shortcut`（桌面快捷方式）、`misc_reference`（17 类参考表查询）
 
-## 设计说明
+## 🏗️ 设计说明
 
 - **聚合粒度**：算法同族共用 schema（如 `crypto_hash(text, algorithm)` 覆盖 MD5/SHA 全家），53 个工具覆盖全部工具类型
 - **统一错误处理**：所有工具异常返回可读错误文本（含可选参数提示），不会抛裸堆栈
 - **现代加密**：对称加密基于 `node:crypto`（AES-GCM/CBC 等现代标准）
 - **静态参考表**：17 类对照表（HTTP 状态码/端口/DNS/朝代/民族等）收敛为 `misc_reference` 一个工具
 
-## 测试
+## 🧪 测试
 
 ```bash
 npm test
@@ -121,8 +163,12 @@ npm test
 - 本地 mock HTTP/WebSocket 服务验证网络工具
 - 错误路径（非法参数、解密失败、连接失败）
 
-## 已知限制
+## ⚠️ 已知限制
 
 - `net_icp` 依赖工信部接口（`hlwicpfwc.miit.gov.cn`），接口变动时工具会返回可读错误
 - `code_format` 对 php/java/c/cpp 等语言为基础缩进美化（非完整 AST 格式化）
 - `xpath_tool` 为轻量正则实现，不支持复杂轴表达式
+
+## 📄 License
+
+[MIT](./LICENSE) © 2026 [@lingxi-agent](https://www.npmjs.com/org/lingxi-agent)

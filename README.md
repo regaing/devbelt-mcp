@@ -2,7 +2,7 @@
 
 # 🧰 devbelt-mcp
 
-**为 LLM 提供 53 个工具 · 164 项细分能力的 MCP server**
+**给 AI 助手的「在线工具箱」—— 53 个常用小工具，AI 一句话就能调用**
 
 JSON 处理 · 加解密 · 代码格式化 · 文本转换 · 单位换算 · 网络查询 · 二维码生成
 
@@ -16,9 +16,21 @@ JSON 处理 · 加解密 · 代码格式化 · 文本转换 · 单位换算 · �
 
 </div>
 
-## 📖 项目简介
+## 📖 这是什么？
 
-`devbelt-mcp` 是一个 **MCP（Model Context Protocol）server**，将 53 个常用在线工具（**164 项细分能力**，按算法/语言/类别维度展开）封装为可被 AI 直接调用的接口：
+`devbelt-mcp` 把站长/开发者常用的 **53 个在线小工具**（共 **164 项细分能力**）打包成 **AI 可以直接调用的接口**——就像给 AI 配了一个在线工具箱。
+
+接入 AI 客户端（LingXi / Claude Desktop 等）后，你直接对 AI 说：
+
+> "把这段 JSON 格式化一下" → `json_process`
+> "算一下 abc 的 MD5" → `crypto_hash`
+> "100 摄氏度等于多少华氏度" → `unit_convert`
+> "查一下 example.com 的 WHOIS" → `net_whois`
+> "生成一个二维码" → `misc_qrcode`
+
+AI 会自动调用对应工具并返回结果，**你不需要写任何代码**。
+
+### 工具箱里有什么
 
 - **JSON 工具**：格式化/压缩/校验、JSON↔XML/YAML/GET 参数、生成 C#/Java/Go 实体类
 - **加解密**：MD5/SHA/HMAC 哈希、AES-GCM/CBC 对称加解密、摩尔斯电码、迅雷/快车 URL 加解密
@@ -28,7 +40,9 @@ JSON 处理 · 加解密 · 代码格式化 · 文本转换 · 单位换算 · �
 - **网络查询**：WHOIS、ICP 备案、HTTP 状态、Gzip 检测、死链检测、网页抓取、WebSocket 完整会话测试
 - **其他**：二维码/条形码/ICO 图标生成、17 类参考表查询
 
-LLM 通过 MCP 协议调用即可，无需编写任何代码；本地 stdio 直连、零数据库、无外部服务依赖（除工信部 ICP 接口）。
+### 技术底座
+
+基于 **MCP**（Model Context Protocol，AI 调用外部工具的开放标准，可以理解为"AI 的 USB-C"），通过 **stdio** 与本地 AI 客户端直连。全部工具在本地运行，零数据库，无外部服务依赖（除工信部 ICP 接口）。
 
 ## ✨ 特性
 

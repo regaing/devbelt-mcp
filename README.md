@@ -2,21 +2,37 @@
 
 # 🧰 devbelt-mcp
 
-**AI 工具 MCP server —— 53 个在线工具，供 LLM 直接调用**
+**为 LLM 提供 53 个工具 · 164 项细分能力的 MCP server**
+
+JSON 处理 · 加解密 · 代码格式化 · 文本转换 · 单位换算 · 网络查询 · 二维码生成
 
 ![npm version](https://img.shields.io/npm/v/@lingxi-agent/devbelt-mcp?color=cb3837&label=npm)
 ![license](https://img.shields.io/badge/license-MIT-brightgreen)
 ![language](https://img.shields.io/badge/language-TypeScript-3178c6)
 ![node](https://img.shields.io/badge/node-%3E%3D18-339933)
 ![mcp](https://img.shields.io/badge/MCP-stdio-8b5cf6)
-![tools](https://img.shields.io/badge/tools-53-4fc3f7)
+![tools](https://img.shields.io/badge/tools-53%20tools%20%7C%20164%20capabilities-4fc3f7)
 ![tests](https://img.shields.io/badge/tests-63%20passing-2ea44f)
 
 </div>
 
+## 📖 项目简介
+
+`devbelt-mcp` 是一个 **MCP（Model Context Protocol）server**，将 53 个常用在线工具（**164 项细分能力**，按算法/语言/类别维度展开）封装为可被 AI 直接调用的接口：
+
+- **JSON 工具**：格式化/压缩/校验、JSON↔XML/YAML/GET 参数、生成 C#/Java/Go 实体类
+- **加解密**：MD5/SHA/HMAC 哈希、AES-GCM/CBC 对称加解密、摩尔斯电码、迅雷/快车 URL 加解密
+- **代码工具**：18 种语言格式化与压缩、JS 混淆、正则测试/生成、XPath 提取
+- **文本转换**：简繁互转、拼音、全角半角、竖排、去重、火星文、UUID 生成等 14 种
+- **单位换算**：长度/面积/温度/速度/压力/数据大小等 13 类
+- **网络查询**：WHOIS、ICP 备案、HTTP 状态、Gzip 检测、死链检测、网页抓取、WebSocket 完整会话测试
+- **其他**：二维码/条形码/ICO 图标生成、17 类参考表查询
+
+LLM 通过 MCP 协议调用即可，无需编写任何代码；本地 stdio 直连、零数据库、无外部服务依赖（除工信部 ICP 接口）。
+
 ## ✨ 特性
 
-- 🚀 **53 个在线工具**：编码转换 / 加解密 / 代码格式化 / JSON / 文本处理 / 单位换算 / 网络查询 / 二维码
+- 🚀 **53 个工具 · 164 项细分能力**：编码转换 / 加解密 / 代码格式化 / JSON / 文本处理 / 单位换算 / 网络查询 / 二维码（如 `crypto_hash` 一个工具覆盖 12 种哈希算法，`code_format` 覆盖 18 种语言）
 - 🧩 **现代加密标准**：AES-GCM/CBC（`node:crypto`），无历史算法残留
 - ⚡ **stdio 直连**：本地运行、零数据库、无状态
 - 🛡️ **统一错误处理**：异常自动转为可读文本，不抛裸堆栈
@@ -85,7 +101,7 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 }
 ```
 
-## 🧰 工具清单（53 个）
+## 🧰 工具清单（53 个工具 · 164 项细分能力）
 
 ### 编码转换 `encode_*`（7）
 | 工具 | 功能 |

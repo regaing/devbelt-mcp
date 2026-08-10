@@ -1,7 +1,7 @@
 {
   "name": "@lingxi-agent/devbelt-mcp",
   "version": "1.0.0",
-  "description": "AI 工具 MCP server：53 个在线工具（JSON/加解密/编码/格式化/文本/换算/网络查询/二维码等）",
+  "description": "AI 工具 MCP server：53 个工具 / 164 项细分能力（JSON/加解密/编码/格式化/文本/换算/网络查询/二维码等）",
   "type": "module",
   "bin": {
     "devbelt-mcp": "./dist/index.js"

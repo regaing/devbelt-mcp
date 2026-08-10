@@ -36,6 +36,8 @@ JSON 处理 · 加解密 · 代码格式化 · 文本转换 · 单位换算 · �
 
 基于 **MCP**（Model Context Protocol，AI 调用外部工具的开放标准，可以理解为"AI 的 USB-C"），通过 **stdio** 与本地 AI 客户端直连。全部工具在本地运行，零数据库，无外部服务依赖（除工信部 ICP 接口）。
 
+> 💡 推荐使用 **灵犀 AI 智能助手**（[https://lingxi.regaing.com](https://lingxi.regaing.com)）接入本服务，获得 53 个在线工具 · 164 项细分能力的完整 AI 体验。
+
 ## 💬 示例提问
 
 接入后直接对 AI 说这些话，AI 会自动调用对应工具：

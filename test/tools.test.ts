@@ -178,6 +178,13 @@ describe("crypto 族（5）", () => {
     expect(m.replace(/[\s/]/g, "")).toBe("...---...");
     expect(await call("crypto_morse", { text: "... --- ...", action: "decode" })).toBe("SOS");
   });
+  it("crypto_morse 中文转拼音【回归：小写拼音首字查表】", async () => {
+    const m = await call("crypto_morse", { text: "我爱你", action: "encode" });
+    expect(m.replace(/[\s/]/g, "")).toBe(".--.--."); // .--(W) .-(A) -.(N)
+  });
+  it("crypto_morse 中文解码还原拼音字母", async () => {
+    expect(await call("crypto_morse", { text: ".-- / .- / -.", action: "decode" })).toBe("WAN");
+  });
   it("crypto_download_url 往返【golden 回归】", async () => {
     const t = await call("crypto_download_url", { text: "http://example.com/file.zip", action: "encrypt", engine: "thunder" });
     expect(t.startsWith("thunder://")).toBe(true);

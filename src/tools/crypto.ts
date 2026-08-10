@@ -145,7 +145,7 @@ export function registerCryptoTools(server: McpServer): void {
             // 中文 → 拼音首字
             try {
               const py = pinyin(ch, { toneType: "none" });
-              return MORSE[py.charAt(0)] ?? "";
+              return MORSE[py.charAt(0).toUpperCase()] ?? "";
             } catch {
               return "";
             }

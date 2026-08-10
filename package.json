@@ -1,12 +1,12 @@
 {
   "name": "@lingxi-agent/devbelt-mcp",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI 工具 MCP server：53 个工具 / 164 项细分能力（JSON/加解密/编码/格式化/文本/换算/网络查询/二维码等）",
   "type": "module",
   "bin": {
-    "devbelt-mcp": "./dist/index.js"
+    "devbelt-mcp": "dist/index.js"
   },
-  "main": "./dist/index.js",
+  "main": "dist/index.js",
   "files": [
     "dist"
   ],
@@ -26,6 +26,9 @@
     "qrcode"
   ],
   "license": "MIT",
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "bwip-js": "^4.5.1",

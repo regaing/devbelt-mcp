@@ -20,15 +20,7 @@ JSON 处理 · 加解密 · 代码格式化 · 文本转换 · 单位换算 · �
 
 `devbelt-mcp` 把站长/开发者常用的 **53 个在线小工具**（共 **164 项细分能力**）打包成 **AI 可以直接调用的接口**——就像给 AI 配了一个在线工具箱。
 
-接入 AI 客户端（LingXi / Claude Desktop 等）后，你直接对 AI 说：
-
-> "把这段 JSON 格式化一下" → `json_process`
-> "算一下 abc 的 MD5" → `crypto_hash`
-> "100 摄氏度等于多少华氏度" → `unit_convert`
-> "查一下 example.com 的 WHOIS" → `net_whois`
-> "生成一个二维码" → `misc_qrcode`
-
-AI 会自动调用对应工具并返回结果，**你不需要写任何代码**。
+接入 AI 客户端（LingXi / Claude Desktop 等）后，直接对 AI 说人话即可，AI 会自动调用对应工具。比如「把这段 JSON 格式化一下」，AI 就会调用 `json_process` 完成——**全程不需要你写任何代码**。更多提问示例见下方 [💬 示例提问](#-示例提问)。
 
 ### 工具箱里有什么
 
@@ -43,6 +35,83 @@ AI 会自动调用对应工具并返回结果，**你不需要写任何代码**�
 ### 技术底座
 
 基于 **MCP**（Model Context Protocol，AI 调用外部工具的开放标准，可以理解为"AI 的 USB-C"），通过 **stdio** 与本地 AI 客户端直连。全部工具在本地运行，零数据库，无外部服务依赖（除工信部 ICP 接口）。
+
+## 💬 示例提问
+
+接入后直接对 AI 说这些话，AI 会自动调用对应工具：
+
+### JSON 与编码
+
+| 提问 | 工具 |
+|---|---|
+| “把这段 JSON 格式化一下 / 压缩成一行” | `json_process` |
+| “这个 JSON 是否合法？” | `json_process` |
+| “把 JSON 转成 YAML / XML / GET 参数” | `json_convert` |
+| “用这段 JSON 生成 Java / C# / Go 实体类” | `json_entity` |
+| “把这段文字转成 Base64 / URL 编码” | `encode_base64` / `encode_url` |
+| “把 255 转成 16 进制” | `encode_radix` |
+
+### 加解密
+
+| 提问 | 工具 |
+|---|---|
+| “算一下 hello 的 MD5 / SHA-256” | `crypto_hash` |
+| “用密码 abc123 加密这段文字” | `crypto_symmetric` |
+| “解密这段 AES 密文（密钥是 xxx）” | `crypto_symmetric` |
+| “把 SOS 转成摩尔斯电码” | `crypto_morse` |
+| “把这个迅雷链接还原成普通地址” | `crypto_download_url` |
+| “#FF0000 是什么颜色，转成 RGB” | `color_convert` |
+
+### 代码
+
+| 提问 | 工具 |
+|---|---|
+| “格式化这段 Python / JS / SQL 代码” | `code_format` |
+| “压缩这段 CSS / HTML” | `code_format` |
+| “这个正则能匹配这段文本吗？” | `regex_tool` |
+| “用正则提取所有邮箱地址” | `regex_tool` |
+| “生成 Go 语言的正则代码” | `regex_generate` |
+| “用 XPath 提取网页里的标题” | `xpath_tool` |
+
+### 文本
+
+| 提问 | 工具 |
+|---|---|
+| “把这段话转成繁体 / 简体” | `text_jianfan` |
+| “这些汉字怎么读，转成拼音” | `text_pinyin` |
+| “统计这段文字的字数” | `text_stats` |
+| “生成一个 16 位随机密码” | `text_random` |
+| “生成 5 个 UUID” | `uuid_generate` |
+| “把这段文本按行去重” | `text_dedup` |
+
+### 单位换算
+
+| 提问 | 工具 |
+|---|---|
+| “1 英里等于多少公里？” | `unit_convert` |
+| “100 摄氏度等于多少华氏度？” | `unit_convert` |
+| “5 GB 等于多少 MB？” | `unit_convert` |
+
+### 网络查询
+
+| 提问 | 工具 |
+|---|---|
+| “查一下 example.com 的 WHOIS 信息” | `net_whois` |
+| “example.com 有没有 ICP 备案？” | `net_icp` |
+| “检测这个网站是否开启了 Gzip” | `net_gzip_check` |
+| “抓取这个网页的内容” | `net_fetch` |
+| “检测 https://example.com 有哪些死链” | `net_dead_link` |
+| “测试这个 WebSocket 服务通不通” | `net_websocket_test` |
+
+### 生成与查询
+
+| 提问 | 工具 |
+|---|---|
+| “生成一个内容为 xxx 的二维码” | `misc_qrcode` |
+| “生成 CODE128 条形码” | `misc_barcode` |
+| “把这张 PNG 转成 ICO 图标” | `misc_favicon` |
+| “HTTP 404 状态码是什么意思？” | `misc_reference` |
+| “常见的公共 DNS 有哪些？” | `misc_reference` |
 
 ## ✨ 特性
 

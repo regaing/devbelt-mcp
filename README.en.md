@@ -250,7 +250,7 @@ Case conversion, simplified/traditional Chinese, pinyin, fullwidth/halfwidth, fl
 | `net_icp` | ICP filing lookup (MIIT official API) | MIIT |
 | `net_ip_info` | IP info (local NICs / geolocation, built-in compact segment table) | **local** |
 | `net_dns_query` | DNS lookup (A/AAAA/CNAME/MX/TXT/NS/SOA/PTR, custom DNS supported) | **node:dns native** |
-| `net_phone_owner` | Phone-number carrier (exact) + representative region | **local** |
+| `net_phone_owner` | Phone-number lookup (built-in full segment DB phone.dat: 497,191 7-digit records, province/city/carrier/area code/zip) | **local** |
 | `net_url_status` | HTTP status / response header check | direct request |
 | `net_gzip_check` | Gzip compression check | direct request |
 | `net_dead_link` | Dead-link detection | direct request |

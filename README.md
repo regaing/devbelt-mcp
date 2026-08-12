@@ -240,7 +240,7 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 | `net_icp` | ICP 备案查询（工信部官方接口） | 工信部 |
 | `net_ip_info` | IP 信息（本机网卡 / 归属地，内置精简段表） | **纯本地** |
 | `net_dns_query` | DNS 解析（A/AAAA/CNAME/MX/TXT/NS/SOA/PTR，可指定 DNS） | **node:dns 原生** |
-| `net_phone_owner` | 手机号归属（运营商精确 + 代表性省份） | **纯本地** |
+| `net_phone_owner` | 手机号归属（内置完整号段库 phone.dat：497,191 条前 7 位记录，省/市/运营商/区号/邮编） | **纯本地** |
 | `net_url_status` | HTTP 状态/响应头检测 | 直接请求 |
 | `net_gzip_check` | Gzip 压缩检测 | 直接请求 |
 | `net_dead_link` | 网站死链检测 | 直接请求 |

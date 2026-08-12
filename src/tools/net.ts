@@ -389,7 +389,7 @@ export function registerNetTools(server: McpServer): void {
 
   server.tool(
     "net_phone_owner",
-    "手机号归属地查询（纯本地内置号段库，无三方接口）：返回运营商（准确）与代表性归属省份（仅供参考）",
+    "手机号归属地查询（内置完整号段库 phone.dat，497191 条前 7 位记录，纯本地无三方接口）：返回省/市/运营商/区号/邮编",
     { phone: z.string().describe("11 位手机号") },
     guard(({ phone }) => JSON.stringify(phoneLookup(phone), null, 2)),
   );

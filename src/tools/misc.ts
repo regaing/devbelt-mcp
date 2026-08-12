@@ -1,5 +1,5 @@
 /**
- * 其他工具族：misc_barcode / misc_qrcode / misc_favicon / misc_shortcut / misc_reference
+ * 其他工具族：misc_barcode / misc_qrcode / misc_favicon / misc_shortcut / misc_reference / misc_calendar
  */
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
@@ -7,8 +7,8 @@ import fs from "node:fs";
 import path from "node:path";
 import bwipjs from "bwip-js";
 import QRCode from "qrcode";
+import { Solar } from "lunar-typescript";
 import { McpToolError, guard } from "../utils/errors.js";
-
 /* ---------------- ICO 封装（PNG 数据直接嵌入，Vista+ 支持） ---------------- */
 function pngToIco(png: Buffer): Buffer {
   if (png.toString("hex", 0, 8) !== "89504e470d0a1a0a") {
@@ -242,5 +242,64 @@ export function registerMiscTools(server: McpServer): void {
       keyword: z.string().optional().describe("过滤关键词"),
     },
     guard(({ topic, keyword }) => buildReference(topic, keyword)),
+  );
+  server.tool(
+    "misc_calendar",
+    "万年历查询（lunar-typescript 纯本地计算，零三方接口）：按日期查公历/农历/干支/生肖/节气/节日/宜忌，或按月查完整月历",
+    {
+      date: z.string().optional().describe("公历日期 YYYY-MM-DD，省略则今天"),
+      month: z.string().optional().describe("公历月份 YYYY-MM，查整月日历（优先于 date）"),
+    },
+    guard(({ date, month }) => {
+      if (month) {
+        const m = month.match(/^(\d{4})-(\d{1,2})$/);
+        if (!m) throw new McpToolError("month 需为 YYYY-MM 格式", "INVALID_PARAM");
+        const year = parseInt(m[1], 10);
+        const mon = parseInt(m[2], 10);
+        if (mon < 1 || mon > 12) throw new McpToolError("月份需在 1-12 之间", "INVALID_PARAM");
+        const days = new Date(year, mon, 0).getDate();
+        const rows: Array<Record<string, string>> = [];
+        for (let d = 1; d <= days; d++) {
+          const solar = Solar.fromYmd(year, mon, d);
+          const lunar = solar.getLunar();
+          const jieqi = lunar.getJieQi();
+          const festivals = [...(solar.getFestivals() ?? []), ...(lunar.getFestivals() ?? [])];
+          rows.push({
+            day: `${mon}/${d}`,
+            lunar: `${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}`,
+            ganZhi: `${lunar.getDayInGanZhi()}`,
+            jieqi: jieqi ?? "",
+            festivals: festivals.length ? festivals.join(",") : "",
+          });
+        }
+        return JSON.stringify({ mode: "月历", month: `${year}-${String(mon).padStart(2, "0")}`, days: rows }, null, 2);
+      }
+      let y: number, mo: number, d: number;
+      if (date) {
+        const dm = date.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+        if (!dm) throw new McpToolError("date 需为 YYYY-MM-DD 格式", "INVALID_PARAM");
+        y = parseInt(dm[1], 10); mo = parseInt(dm[2], 10); d = parseInt(dm[3], 10);
+      } else {
+        const now = new Date();
+        y = now.getFullYear(); mo = now.getMonth() + 1; d = now.getDate();
+      }
+      const solar = Solar.fromYmd(y, mo, d);
+      const lunar = solar.getLunar();
+      const jieqi = lunar.getJieQi();
+      const solarFest = solar.getFestivals() ?? [];
+      const lunarFest = lunar.getFestivals() ?? [];
+      return JSON.stringify({
+        date: `${y}-${String(mo).padStart(2, "0")}-${String(d).padStart(2, "0")}`,
+        weekday: "周" + ["日", "一", "二", "三", "四", "五", "六"][new Date(y, mo - 1, d).getDay()],
+        lunar: `${lunar.getYearInChinese()}年${lunar.getMonthInChinese()}月${lunar.getDayInChinese()}`,
+        ganZhi: `${lunar.getYearInGanZhi()}年 ${lunar.getMonthInGanZhi()}月 ${lunar.getDayInGanZhi()}日`,
+        shengXiao: lunar.getYearShengXiao(),
+        xingZuo: solar.getXingZuo(),
+        jieqi: jieqi ?? "",
+        festivals: [...solarFest, ...lunarFest],
+        yi: lunar.getDayYi(),
+        ji: lunar.getDayJi(),
+      }, null, 2);
+    }),
   );
 }

@@ -1,14 +1,15 @@
 /**
  * 文本工具族：text_case / text_jianfan / text_pinyin / text_fullwidth /
  * text_flip / text_vertical / text_stats / text_dedup / text_replace /
- * text_filter / text_format / text_random / text_martian / uuid_generate
+ * text_filter / text_format / text_random / text_martian / uuid_generate / text_idcard
  */
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import crypto from "node:crypto";
 import OpenCC from "opencc-js";
 import { pinyin } from "pinyin-pro";
 import { McpToolError, guard } from "../utils/errors.js";
+import { parseIdCard } from "../lib/idcard.js";
 
 const jianfan = {
   toTraditional: OpenCC.Converter({ from: "cn", to: "tw" }),
@@ -341,5 +342,11 @@ export function registerTextTools(server: McpServer): void {
       }
       return out.join("\n");
     }),
+  );
+  server.tool(
+    "text_idcard",
+    "身份证号解析（GB 11643-1999 纯本地算法，零三方接口）：校验 18/15 位、解析省市区/生日/性别/年龄、15 位转 18 位",
+    { id: z.string().describe("15 或 18 位身份证号") },
+    guard(({ id }) => JSON.stringify(parseIdCard(id), null, 2)),
   );
 }

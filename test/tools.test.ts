@@ -1,6 +1,6 @@
 /**
  * devbelt-mcp 端到端测试：通过 InMemoryTransport 连接真实 MCP server，
- * 覆盖全部 53 个工具的调用，含标准输入输出 golden 回归样例。
+ * 覆盖全部 58 个工具的调用，含标准输入输出 golden 回归样例。
  */
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
@@ -41,9 +41,9 @@ async function expectError(name: string, args: Record<string, unknown>): Promise
 }
 
 describe("工具注册完整性", () => {
-  it("应注册全部 53 个工具", async () => {
+  it("应注册全部 58 个工具", async () => {
     const tools: any = await client.listTools();
-    expect(tools.tools.length).toBe(53);
+    expect(tools.tools.length).toBe(58);
     const names = tools.tools.map((t: any) => t.name).sort();
     expect(names).toEqual(
       [
@@ -52,14 +52,15 @@ describe("工具注册完整性", () => {
         "data_html_convert", "data_html_table", "data_text_diff", "encode_ascii",
         "encode_base64", "encode_escape", "encode_radix", "encode_unicode",
         "encode_url", "encode_utf8", "json_convert", "json_entity", "json_process",
-        "misc_barcode", "misc_favicon", "misc_qrcode", "misc_reference",
-        "misc_shortcut", "net_dead_link", "net_fetch", "net_gzip_check", "net_icp",
-        "net_keyword_density", "net_meta_analyze", "net_url_status",
-        "net_websocket_test", "net_whois", "regex_generate", "regex_tool",
+        "misc_barcode", "misc_favicon", "misc_qrcode", "misc_reference", "misc_shortcut",
+        "misc_calendar", "net_dead_link", "net_fetch", "net_gzip_check", "net_icp",
+        "net_ip_info", "net_dns_query", "net_phone_owner", "net_keyword_density",
+        "net_meta_analyze", "net_url_status", "net_websocket_test", "net_whois",
+        "regex_generate", "regex_tool",
         "text_case", "text_dedup", "text_filter", "text_flip", "text_format",
         "text_fullwidth", "text_jianfan", "text_martian", "text_pinyin",
         "text_random", "text_replace", "text_stats", "text_vertical",
-        "unit_convert", "uuid_generate", "xpath_tool",
+        "text_idcard", "unit_convert", "uuid_generate", "xpath_tool",
       ].sort(),
     );
   });
@@ -455,6 +456,80 @@ describe("misc 族（5）", () => {
     expect(await call("misc_reference", { topic: "http_status", keyword: "404" })).toContain("404");
     expect(await call("misc_reference", { topic: "ascii", keyword: "65" })).toContain("65 → A");
     expect(await call("misc_reference", { topic: "dynasty", keyword: "唐" })).toContain("唐");
+  });
+  it("misc_calendar: 单日查询", async () => {
+    const r = JSON.parse(await call("misc_calendar", { date: "2026-08-12" }));
+    expect(r.date).toBe("2026-08-12");
+    expect(r.weekday).toBe("周三");
+    expect(r.lunar).toContain("二〇二六");
+    expect(r.shengXiao).toBe("马");
+    expect(r.xingZuo).toBe("狮子");
+  });
+  it("misc_calendar: 月历查询与参数校验", async () => {
+    const r = JSON.parse(await call("misc_calendar", { month: "2026-08" }));
+    expect(r.mode).toBe("月历");
+    expect(r.days.length).toBe(31);
+    expect(r.days[0].festivals).toContain("建军节");
+    await expectError("misc_calendar", { month: "2026-13" });
+    await expectError("misc_calendar", { date: "2026/01/01" });
+  });
+  it("text_idcard: 18 位解析", async () => {
+    const r = JSON.parse(await call("text_idcard", { id: "110101199003077717" }));
+    expect(r.valid).toBe(true);
+    expect(r.province).toBe("北京市");
+    expect(r.city).toBe("北京市辖区");
+    expect(r.birth_date).toBe("1990-03-07");
+    expect(r.gender).toBe("男");
+    expect(r.check_pass).toBe(false); // 演示号校验位本身不通过，工具如实报告
+  });
+  it("text_idcard: 15 位转 18 位", async () => {
+    const r = JSON.parse(await call("text_idcard", { id: "110101900307771" }));
+    expect(r.valid).toBe(true);
+    expect(r.source_length).toBe(15);
+    expect(r.id).toBe("110101199003077715");
+    expect(r.check_pass).toBe(true);
+  });
+  it("text_idcard: 非法输入", async () => {
+    const r = JSON.parse(await call("text_idcard", { id: "12345" }));
+    expect(r.valid).toBe(false);
+    const r2 = JSON.parse(await call("text_idcard", { id: "199013" }));
+    expect(r2.valid).toBe(false);
+  });
+  it("net_ip_info: 本机与指定 IP", async () => {
+    const local = JSON.parse(await call("net_ip_info", {}));
+    expect(local.mode).toBe("本机网卡");
+    expect(local.interfaces.length).toBeGreaterThan(0);
+    const gd = JSON.parse(await call("net_ip_info", { ip: "202.96.0.10" }));
+    expect(gd.region).toBe("广东");
+    expect(gd.isp).toBe("电信");
+    const priv = JSON.parse(await call("net_ip_info", { ip: "192.168.1.1" }));
+    expect(priv.type).toBe("特殊地址");
+    expect(priv.detail).toContain("私有");
+    const loop = JSON.parse(await call("net_ip_info", { ip: "127.0.0.1" }));
+    expect(loop.detail).toContain("回环");
+  });
+  it("net_ip_info: 非法 IP", async () => {
+    await expectError("net_ip_info", { ip: "999.1.1.1" });
+    await expectError("net_ip_info", { ip: "::1" });
+  });
+  it("net_dns_query: 指定 DNS 服务器（沙箱系统 DNS 不可用）", async () => {
+    const r = JSON.parse(await call("net_dns_query", { domain: "baidu.com", type: "A", server: "223.5.5.5" }));
+    expect(r.domain).toBe("baidu.com");
+    expect(r.type).toBe("A");
+    expect(r.records.length).toBeGreaterThan(0);
+  });
+  it("net_dns_query: MX 记录", async () => {
+    const r = JSON.parse(await call("net_dns_query", { domain: "qq.com", type: "MX", server: "223.5.5.5" }));
+    expect(r.records[0].exchange).toContain("qq.com");
+  });
+  it("net_phone_owner: 运营商与号段", async () => {
+    const r = JSON.parse(await call("net_phone_owner", { phone: "13800138000" }));
+    expect(r.valid).toBe(true);
+    expect(r.carrier).toBe("中国移动");
+    const v = JSON.parse(await call("net_phone_owner", { phone: "17012345678" }));
+    expect(v.carrier).toBe("中国电信"); // 1701 段虚拟运营商细分
+    const bad = JSON.parse(await call("net_phone_owner", { phone: "12345" }));
+    expect(bad.valid).toBe(false);
   });
 });
 

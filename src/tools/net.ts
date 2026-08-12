@@ -1,17 +1,20 @@
 /**
  * 网络查询族：net_whois / net_icp / net_url_status / net_gzip_check /
  * net_dead_link / net_fetch / net_meta_analyze / net_keyword_density /
- * net_websocket_test
+ * net_websocket_test / net_ip_info / net_dns_query / net_phone_owner
  *
- * 全部 TypeScript 原生实现。
+ * 全部 TypeScript 原生实现（net_ip_info/net_dns_query/net_phone_owner 纯本地，无三方接口）。
  */
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import net from "node:net";
+import os from "node:os";
 import { createHash } from "node:crypto";
 import WebSocket from "ws";
 import { fetchText, fetchHeaders } from "../utils/fetch.js";
 import { McpToolError, guard } from "../utils/errors.js";
+import { ipLookup } from "../lib/ipdata.js";
+import { phoneLookup } from "../lib/phonedata.js";
 
 /* ---------------- WHOIS（原生，不依赖第三方接口） ---------------- */
 function whoisQuery(server: string, query: string, port = 43, timeout = 10000): Promise<string> {
@@ -338,5 +341,56 @@ export function registerNetTools(server: McpServer): void {
       if (!/^wss?:\/\//i.test(url)) throw new McpToolError("URL 需以 ws:// 或 wss:// 开头", "INVALID_PARAM");
       return wsTest({ url, messages: messages ?? [], ping, waitFor: wait_for, timeout });
     }),
+  );
+  server.tool(
+    "net_ip_info",
+    "IP 信息查询（纯本地，无三方接口）：不传 ip 返回本机网卡信息；传 ip 查询归属地/类型（内置精简段表）",
+    { ip: z.string().optional().describe("IPv4 地址，省略则查本机网卡") },
+    guard(({ ip }) => {
+      if (!ip) {
+        const ifaces = os.networkInterfaces();
+        const list: Array<{ interface: string; family: string; address: string; internal: boolean }> = [];
+        for (const [name, addrs] of Object.entries(ifaces)) {
+          for (const a of addrs ?? []) {
+            list.push({ interface: name, family: a.family, address: a.address, internal: a.internal });
+          }
+        }
+        return JSON.stringify({ mode: "本机网卡", interfaces: list }, null, 2);
+      }
+      if (net.isIP(ip) !== 4) throw new McpToolError("仅支持 IPv4 地址查询", "INVALID_PARAM");
+      return JSON.stringify(ipLookup(ip), null, 2);
+    }),
+  );
+
+  server.tool(
+    "net_dns_query",
+    "DNS 解析查询（node:dns 原生实现，零三方接口）。支持 A/AAAA/CNAME/MX/TXT/NS/SOA/PTR/ANY，可指定自定义 DNS 服务器",
+    {
+      domain: z.string().describe("域名"),
+      type: z.enum(["A", "AAAA", "CNAME", "MX", "TXT", "NS", "SOA", "PTR", "ANY"]).default("A").describe("记录类型"),
+      server: z.string().optional().describe("自定义 DNS 服务器 IP（默认系统 DNS）"),
+    },
+    guard(async ({ domain, type, server }) => {
+      const dnsModule = await import("node:dns/promises");
+      const resolver: any = server ? new dnsModule.Resolver() : dnsModule;
+      if (server) resolver.setServers([server]);
+      const methodMap: Record<string, string> = {
+        A: "resolve4", AAAA: "resolve6", CNAME: "resolveCname", MX: "resolveMx",
+        TXT: "resolveTxt", NS: "resolveNs", SOA: "resolveSoa", PTR: "resolvePtr", ANY: "resolveAny",
+      };
+      try {
+        const result = await resolver[methodMap[type]](domain);
+        return JSON.stringify({ domain, type, server: server ?? "系统默认", records: result }, null, 2);
+      } catch (e: any) {
+        throw new McpToolError(`DNS 查询失败（${type} ${domain}）：${e?.code ?? e?.message ?? e}`, "DNS_QUERY");
+      }
+    }),
+  );
+
+  server.tool(
+    "net_phone_owner",
+    "手机号归属地查询（纯本地内置号段库，无三方接口）：返回运营商（准确）与代表性归属省份（仅供参考）",
+    { phone: z.string().describe("11 位手机号") },
+    guard(({ phone }) => JSON.stringify(phoneLookup(phone), null, 2)),
   );
 }

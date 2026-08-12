@@ -41,10 +41,11 @@ More examples in [💬 Example Prompts](#-example-prompts) below.
 - **JSON tools**: format/compress/validate, JSON↔XML/YAML/GET params, generate C#/Java/Go entity classes
 - **Encryption & hashing**: MD5/SHA/HMAC hashing, AES-GCM/CBC symmetric encryption, Morse code, Thunder/FlashGet download URL encode/decode
 - **Code tools**: format & minify in 18 languages, JS obfuscation, regex testing, regex code generation, XPath extraction
-- **Text conversion**: simplified/traditional Chinese, pinyin, fullwidth/halfwidth, text flip, vertical text, dedup, Martian text, UUID generation (14 tools)
+- **Text conversion**: simplified/traditional Chinese, pinyin, fullwidth/halfwidth, text flip, vertical text, dedup, Martian text, UUID generation, ID-card parsing (15 tools)
 - **Unit conversion**: 13 categories — length, area, temperature, speed, pressure, data size, etc.
-- **Network lookup**: WHOIS, ICP filing, HTTP status, Gzip check, dead-link detection, web scraping, full WebSocket session testing
-- **Others**: QR code / barcode / ICO icon generation, 17 reference tables
+- **Network lookup**: WHOIS, ICP filing, IP geolocation, DNS lookup, HTTP status, Gzip check, dead-link detection, web scraping, full WebSocket session testing
+- **Time tools**: timestamp conversion, multi-timezone comparison, time diff/countdown, cron parsing, duration humanization, strftime formatting
+- **Others**: QR code / barcode / ICO icon generation, lunar calendar, 17 reference tables
 
 ### Under the hood
 

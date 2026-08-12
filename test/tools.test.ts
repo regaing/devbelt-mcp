@@ -526,6 +526,12 @@ describe("misc 族（5）", () => {
     const r = JSON.parse(await call("net_phone_owner", { phone: "13800138000" }));
     expect(r.valid).toBe(true);
     expect(r.carrier).toBe("中国移动");
+    expect(r.representative_region).toBe("北京");
+    // 回归：1319 号段（四川南充联通，用户实测）
+    const r2 = JSON.parse(await call("net_phone_owner", { phone: "13198826926" }));
+    expect(r2.valid).toBe(true);
+    expect(r2.carrier).toBe("中国联通");
+    expect(r2.representative_region).toBe("四川");
     const v = JSON.parse(await call("net_phone_owner", { phone: "17012345678" }));
     expect(v.carrier).toBe("中国电信"); // 1701 段虚拟运营商细分
     const bad = JSON.parse(await call("net_phone_owner", { phone: "12345" }));

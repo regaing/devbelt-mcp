@@ -41,9 +41,9 @@ async function expectError(name: string, args: Record<string, unknown>): Promise
 }
 
 describe("工具注册完整性", () => {
-  it("应注册全部 59 个工具", async () => {
+  it("应注册全部 58 个工具", async () => {
     const tools: any = await client.listTools();
-    expect(tools.tools.length).toBe(59);
+    expect(tools.tools.length).toBe(58);
     const names = tools.tools.map((t: any) => t.name).sort();
     expect(names).toEqual(
       [
@@ -54,7 +54,7 @@ describe("工具注册完整性", () => {
         "encode_url", "encode_utf8", "json_convert", "json_entity", "json_process",
         "misc_barcode", "misc_favicon", "misc_qrcode", "misc_reference", "misc_shortcut",
         "misc_calendar", "net_dead_link", "net_fetch", "net_gzip_check", "net_icp",
-        "net_ip_info", "net_dns_query", "net_phone_owner", "net_keyword_density",
+        "net_ip_info", "net_dns_query", "net_keyword_density",
         "net_meta_analyze", "net_url_status", "net_websocket_test", "net_whois",
         "regex_generate", "regex_tool",
         "text_case", "text_dedup", "text_filter", "text_flip", "text_format",
@@ -521,33 +521,6 @@ describe("misc 族（5）", () => {
   it("net_dns_query: MX 记录", async () => {
     const r = JSON.parse(await call("net_dns_query", { domain: "qq.com", type: "MX", server: "223.5.5.5" }));
     expect(r.records[0].exchange).toContain("qq.com");
-  });
-  it("net_phone_owner: 完整号段库查询", async () => {
-    const r = JSON.parse(await call("net_phone_owner", { phone: "13800138000" }));
-    expect(r.valid).toBe(true);
-    expect(r.carrier).toBe("中国移动");
-    expect(r.province).toBe("北京");
-    expect(r.city).toBe("北京");
-    // 回归：13198826926 四川南充联通（用户实测 + phone.dat 双重确认）
-    const r2 = JSON.parse(await call("net_phone_owner", { phone: "13198826926" }));
-    expect(r2.valid).toBe(true);
-    expect(r2.carrier).toBe("中国联通");
-    expect(r2.province).toBe("四川");
-    expect(r2.city).toBe("南充");
-    // 跨省段区分：1319123 山西阳泉 vs 1319882 四川南充（前 4 位相同、前 7 位不同）
-    const r3 = JSON.parse(await call("net_phone_owner", { phone: "13191234567" }));
-    expect(r3.province).toBe("山西");
-    expect(r3.city).toBe("阳泉");
-    // README 示例：1895750 浙江绍兴电信
-    const r4 = JSON.parse(await call("net_phone_owner", { phone: "18957509123" }));
-    expect(r4.province).toBe("浙江");
-    expect(r4.city).toBe("绍兴");
-    expect(r4.carrier).toBe("中国电信");
-    // 广电 192 段
-    const r5 = JSON.parse(await call("net_phone_owner", { phone: "19201234567" }));
-    expect(r5.carrier).toBe("中国广电");
-    const bad = JSON.parse(await call("net_phone_owner", { phone: "12345" }));
-    expect(bad.valid).toBe(false);
   });
   it("time_timestamp: 秒/毫秒自动识别与输出", async () => {
     const s = JSON.parse(await call("time_timestamp", { value: "1700000000" }));

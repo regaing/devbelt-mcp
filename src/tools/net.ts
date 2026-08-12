@@ -1,9 +1,9 @@
 /**
  * 网络查询族：net_whois / net_icp / net_url_status / net_gzip_check /
  * net_dead_link / net_fetch / net_meta_analyze / net_keyword_density /
- * net_websocket_test / net_ip_info / net_dns_query / net_phone_owner
+ * net_websocket_test / net_ip_info / net_dns_query
  *
- * 全部 TypeScript 原生实现（net_ip_info/net_dns_query/net_phone_owner 纯本地，无三方接口）。
+ * 全部 TypeScript 原生实现（net_ip_info/net_dns_query 纯本地，无三方接口）。
  */
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
@@ -14,7 +14,6 @@ import WebSocket from "ws";
 import { fetchText, fetchHeaders } from "../utils/fetch.js";
 import { McpToolError, guard } from "../utils/errors.js";
 import { ipLookup } from "../lib/ipdata.js";
-import { phoneLookup } from "../lib/phonedata.js";
 
 /* ---------------- WHOIS（原生，不依赖第三方接口） ---------------- */
 function whoisQuery(server: string, query: string, port = 43, timeout = 10000): Promise<string> {
@@ -387,10 +386,4 @@ export function registerNetTools(server: McpServer): void {
     }),
   );
 
-  server.tool(
-    "net_phone_owner",
-    "手机号归属地查询（内置完整号段库 phone.dat，497191 条前 7 位记录，纯本地无三方接口）：返回省/市/运营商/区号/邮编",
-    { phone: z.string().describe("11 位手机号") },
-    guard(({ phone }) => JSON.stringify(phoneLookup(phone), null, 2)),
-  );
 }

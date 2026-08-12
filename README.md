@@ -6,7 +6,7 @@
 
 # 🧰 devbelt-mcp
 
-**给 AI 助手的「在线工具箱」—— 59 个常用小工具，AI 一句话就能调用**
+**给 AI 助手的「在线工具箱」—— 58 个常用小工具，AI 一句话就能调用**
 
 JSON 处理 · 加解密 · 代码格式化 · 文本转换 · 单位换算 · 网络查询 · 二维码生成
 
@@ -15,14 +15,14 @@ JSON 处理 · 加解密 · 代码格式化 · 文本转换 · 单位换算 · �
 ![language](https://img.shields.io/badge/language-TypeScript-3178c6)
 ![node](https://img.shields.io/badge/node-%3E%3D18-339933)
 ![mcp](https://img.shields.io/badge/MCP-stdio-8b5cf6)
-![tools](https://img.shields.io/badge/tools-59%20tools%20%7C%20170%2B%20capabilities-4fc3f7)
-![tests](https://img.shields.io/badge/tests-79%20passing-2ea44f)
+![tools](https://img.shields.io/badge/tools-58%20tools%20%7C%20170%2B%20capabilities-4fc3f7)
+![tests](https://img.shields.io/badge/tests-78%20passing-2ea44f)
 
 </div>
 
 ## 📖 这是什么？
 
-`devbelt-mcp` 把站长/开发者常用的 **59 个在线小工具**（共 **170+ 项细分能力**）打包成 **AI 可以直接调用的接口**——就像给 AI 配了一个在线工具箱。
+`devbelt-mcp` 把站长/开发者常用的 **58 个在线小工具**（共 **170+ 项细分能力**）打包成 **AI 可以直接调用的接口**——就像给 AI 配了一个在线工具箱。
 
 接入 AI 客户端（LingXi / Claude Desktop 等）后，直接对 AI 说人话即可，AI 会自动调用对应工具。比如「把这段 JSON 格式化一下」，AI 就会调用 `json_process` 完成——**全程不需要你写任何代码**。更多提问示例见下方 [💬 示例提问](#-示例提问)。
 
@@ -40,7 +40,7 @@ JSON 处理 · 加解密 · 代码格式化 · 文本转换 · 单位换算 · �
 
 基于 **MCP**（Model Context Protocol，AI 调用外部工具的开放标准，可以理解为"AI 的 USB-C"），通过 **stdio** 与本地 AI 客户端直连。全部工具在本地运行，零数据库，无外部服务依赖（除工信部 ICP 接口）。
 
-> 💡 推荐使用 **灵犀 AI 智能助手**（[https://lingxi.regaing.com](https://lingxi.regaing.com)）接入本服务，获得 59 个在线工具 · 170+ 项细分能力的完整 AI 体验。
+> 💡 推荐使用 **灵犀 AI 智能助手**（[https://lingxi.regaing.com](https://lingxi.regaing.com)）接入本服务，获得 58 个在线工具 · 170+ 项细分能力的完整 AI 体验。
 
 ## 💬 示例提问
 
@@ -121,18 +121,18 @@ JSON 处理 · 加解密 · 代码格式化 · 文本转换 · 单位换算 · �
 
 ## ✨ 特性
 
-- 🚀 **59 个工具 · 170+ 项细分能力**：编码转换 / 加解密 / 代码格式化 / JSON / 文本处理 / 单位换算 / 网络查询 / 二维码（如 `crypto_hash` 一个工具覆盖 12 种哈希算法，`code_format` 覆盖 18 种语言）
+- 🚀 **58 个工具 · 170+ 项细分能力**：编码转换 / 加解密 / 代码格式化 / JSON / 文本处理 / 单位换算 / 网络查询 / 二维码（如 `crypto_hash` 一个工具覆盖 12 种哈希算法，`code_format` 覆盖 18 种语言）
 - 🧩 **现代加密标准**：AES-GCM/CBC（`node:crypto`），无历史算法残留
 - ⚡ **stdio 直连**：本地运行、零数据库、无状态
 - 🛡️ **统一错误处理**：异常自动转为可读文本，不抛裸堆栈
-- ✅ **79 个端到端测试**：InMemoryTransport 连接真实 server，含 golden 回归
+- ✅ **78 个端到端测试**：InMemoryTransport 连接真实 server，含 golden 回归
 
 ## 🚀 快速开始
 
 ```bash
 npm install
 npm run build        # 编译到 dist/
-npm test             # 运行 79 个端到端测试
+npm test             # 运行 78 个端到端测试
 node dist/index.js   # 启动 stdio server
 ```
 
@@ -190,7 +190,7 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 }
 ```
 
-## 🧰 工具清单（59 个工具 · 170+ 项细分能力）
+## 🧰 工具清单（58 个工具 · 170+ 项细分能力）
 
 ### 编码转换 `encode_*`（7）
 | 工具 | 功能 |
@@ -233,14 +233,13 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 ### 单位换算 `unit_convert`（1）
 13 类单位：长度/面积/体积/速度/压力/功率/热量/力/时间/数据大小/角度/密度/温度
 
-### 网络查询 `net_*`（12）
+### 网络查询 `net_*`（11）
 | 工具 | 功能 | 依赖 |
 |---|---|---|
 | `net_whois` | WHOIS 查询（**原生实现**，连 whois.iana.org 递归） | 无第三方 |
 | `net_icp` | ICP 备案查询（工信部官方接口） | 工信部 |
 | `net_ip_info` | IP 信息（本机网卡 / 归属地，内置精简段表） | **纯本地** |
 | `net_dns_query` | DNS 解析（A/AAAA/CNAME/MX/TXT/NS/SOA/PTR，可指定 DNS） | **node:dns 原生** |
-| `net_phone_owner` | 手机号归属（内置完整号段库 phone.dat：497,191 条前 7 位记录，省/市/运营商/区号/邮编） | **纯本地** |
 | `net_url_status` | HTTP 状态/响应头检测 | 直接请求 |
 | `net_gzip_check` | Gzip 压缩检测 | 直接请求 |
 | `net_dead_link` | 网站死链检测 | 直接请求 |
@@ -256,7 +255,7 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 `time_timestamp`（时间戳转换：秒/毫秒/微秒/纳秒自动识别、ISO/RFC2822/中文/相对时间输入、UTC/本地/自定义时区输出、星期/ISO周/闰年信息）
 ## 🏗️ 设计说明
 
-- **聚合粒度**：算法同族共用 schema（如 `crypto_hash(text, algorithm)` 覆盖 MD5/SHA 全家），59 个工具覆盖全部工具类型
+- **聚合粒度**：算法同族共用 schema（如 `crypto_hash(text, algorithm)` 覆盖 MD5/SHA 全家），58 个工具覆盖全部工具类型
 - **统一错误处理**：所有工具异常返回可读错误文本（含可选参数提示），不会抛裸堆栈
 - **现代加密**：对称加密基于 `node:crypto`（AES-GCM/CBC 等现代标准）
 - **静态参考表**：17 类对照表（HTTP 状态码/端口/DNS/朝代/民族等）收敛为 `misc_reference` 一个工具
@@ -267,8 +266,8 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 npm test
 ```
 
-79 个端到端测试（InMemoryTransport 连接真实 server）覆盖：
-- 全部 59 个工具调用
+78 个端到端测试（InMemoryTransport 连接真实 server）覆盖：
+- 全部 58 个工具调用
 - 标准输入输出回归（`md5('abc')`、进制转换、单位换算等）
 - 本地 mock HTTP/WebSocket 服务验证网络工具
 - 错误路径（非法参数、解密失败、连接失败）

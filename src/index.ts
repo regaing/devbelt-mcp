@@ -2,10 +2,8 @@
 /**
  * devbelt-mcp — AI 工具 MCP server
  *
- * 提供 53 个在线工具：
- *   encode(7) / crypto(5) / code(5) / json(3) / data(4) / text(14) / unit(1) / net(9) / misc(5)
- *
- * 启动：stdio 直连（本地桌面客户端），node dist/index.js
+ * 提供 59 个在线工具：
+ *   encode(7) / crypto(5) / code(5) / json(3) / data(4) / text(15) / unit(1) / net(12) / misc(6) / time(1)
  */
 import { pathToFileURL } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
@@ -19,6 +17,7 @@ import { registerTextTools } from "./tools/text.js";
 import { registerUnitTools } from "./tools/unit.js";
 import { registerNetTools } from "./tools/net.js";
 import { registerMiscTools } from "./tools/misc.js";
+import { registerTimeTools } from "./tools/time.js";
 
 /** 创建并注册全部工具的 MCP server（供 index 与测试复用） */
 export function createServer(): McpServer {
@@ -36,6 +35,7 @@ export function createServer(): McpServer {
   registerUnitTools(server); // 1
   registerNetTools(server); // 9
   registerMiscTools(server); // 5
+  registerTimeTools(server); // 1
   return server;
 }
 

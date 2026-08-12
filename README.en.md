@@ -6,7 +6,7 @@
 
 # 🧰 devbelt-mcp
 
-**An online toolbox for AI assistants — 58 everyday utilities, callable with plain language**
+**An online toolbox for AI assistants — 59 everyday utilities, callable with plain language**
 
 JSON · Encryption · Code Formatting · Text Conversion · Unit Conversion · Network Lookup · QR Code
 
@@ -15,14 +15,14 @@ JSON · Encryption · Code Formatting · Text Conversion · Unit Conversion · N
 ![language](https://img.shields.io/badge/language-TypeScript-3178c6)
 ![node](https://img.shields.io/badge/node-%3E%3D18-339933)
 ![mcp](https://img.shields.io/badge/MCP-stdio-8b5cf6)
-![tools](https://img.shields.io/badge/tools-58%20tools%20%7C%20170%2B%20capabilities-4fc3f7)
-![tests](https://img.shields.io/badge/tests-75%20passing-2ea44f)
+![tools](https://img.shields.io/badge/tools-59%20tools%20%7C%20170%2B%20capabilities-4fc3f7)
+![tests](https://img.shields.io/badge/tests-79%20passing-2ea44f)
 
 </div>
 
 ## 📖 What is this?
 
-`devbelt-mcp` packages **58 everyday online utilities** (with **170+ granular capabilities**) into interfaces **AI can call directly** — think of it as equipping an AI with an online toolbox.
+`devbelt-mcp` packages **59 everyday online utilities** (with **170+ granular capabilities**) into interfaces **AI can call directly** — think of it as equipping an AI with an online toolbox.
 
 Once connected to an AI client (LingXi / Claude Desktop / etc.), just talk to the AI in plain language:
 
@@ -50,7 +50,7 @@ More examples in [💬 Example Prompts](#-example-prompts) below.
 
 Built on **MCP** (Model Context Protocol, the open standard for AI tools — think of it as "USB-C for AI"), connected to local AI clients via **stdio**. Everything runs locally: zero database, no external service dependencies (except the MIIT ICP interface).
 
-> 💡 For the best experience, use the **LingXi AI Assistant** ([https://lingxi.regaing.com](https://lingxi.regaing.com)) to connect to this server and get the full AI experience across 58 tools · 170+ capabilities.
+> 💡 For the best experience, use the **LingXi AI Assistant** ([https://lingxi.regaing.com](https://lingxi.regaing.com)) to connect to this server and get the full AI experience across 59 tools · 170+ capabilities.
 
 ## 💬 Example Prompts
 
@@ -131,18 +131,18 @@ Ask the AI in plain language — it will pick the right tool automatically:
 
 ## ✨ Features
 
-- 🚀 **58 tools · 170+ granular capabilities**: encoding / encryption / code formatting / JSON / text / units / network / QR codes (e.g. one `crypto_hash` tool covers 12 hashing algorithms; `code_format` covers 18 languages)
+- 🚀 **59 tools · 170+ granular capabilities**: encoding / encryption / code formatting / JSON / text / units / network / QR codes (e.g. one `crypto_hash` tool covers 12 hashing algorithms; `code_format` covers 18 languages)
 - 🧩 **Modern crypto standards**: AES-GCM/CBC (`node:crypto`), no legacy algorithms
 - ⚡ **stdio direct connection**: runs locally, zero database, stateless
 - 🛡️ **Unified error handling**: exceptions become readable text, never raw stack traces
-- ✅ **75 end-to-end tests**: real server via InMemoryTransport, including golden regression
+- ✅ **79 end-to-end tests**: real server via InMemoryTransport, including golden regression
 
 ## 🚀 Quick Start
 
 ```bash
 npm install
 npm run build        # compile to dist/
-npm test             # run the 75 end-to-end tests
+npm test             # run the 79 end-to-end tests
 node dist/index.js   # start the stdio server
 ```
 
@@ -200,7 +200,7 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 }
 ```
 
-## 🧰 Tool Inventory (58 tools · 170+ capabilities)
+## 🧰 Tool Inventory (59 tools · 170+ capabilities)
 
 ### Encoding `encode_*` (7)
 | Tool | Description |
@@ -262,9 +262,12 @@ Case conversion, simplified/traditional Chinese, pinyin, fullwidth/halfwidth, fl
 ### Misc `misc_*` (6)
 `misc_barcode` (barcode), `misc_qrcode` (QR code), `misc_favicon` (PNG→ICO), `misc_shortcut` (desktop shortcut), `misc_reference` (17 reference tables), `misc_calendar` (lunar calendar: lunar/ganzhi/zodiac/solar terms/festivals/yiji, lunar-typescript local)
 
+### Time `time_*` (1)
+`time_timestamp` (timestamp conversion: s/ms/us/ns auto-detect, ISO/RFC2822/Chinese/relative input, UTC/local/custom-timezone output, weekday/ISO week/leap-year info)
+
 ## 🏗️ Design Notes
 
-- **Aggregated granularity**: tools of the same family share one schema (e.g. `crypto_hash(text, algorithm)` covers the whole MD5/SHA family); 58 tools cover every tool category
+- **Aggregated granularity**: tools of the same family share one schema (e.g. `crypto_hash(text, algorithm)` covers the whole MD5/SHA family); 59 tools cover every tool category
 - **Unified error handling**: every tool returns a readable error text (with valid option hints), never a raw stack trace
 - **Modern crypto**: symmetric encryption built on `node:crypto` (AES-GCM/CBC)
 - **Reference tables**: 17 lookup tables (HTTP status codes / ports / DNS / dynasties / ethnic groups, etc.) consolidated into a single `misc_reference` tool
@@ -275,8 +278,8 @@ Case conversion, simplified/traditional Chinese, pinyin, fullwidth/halfwidth, fl
 npm test
 ```
 
-75 end-to-end tests (real server via InMemoryTransport) cover:
-- All 58 tool invocations
+79 end-to-end tests (real server via InMemoryTransport) cover:
+- All 59 tool invocations
 - Standard input/output golden regression (`md5('abc')`, base conversion, unit conversion, etc.)
 - Network tools verified against local mock HTTP/WebSocket servers
 - Error paths (invalid params, decryption failure, connection failure)

@@ -41,9 +41,9 @@ async function expectError(name: string, args: Record<string, unknown>): Promise
 }
 
 describe("工具注册完整性", () => {
-  it("应注册全部 58 个工具", async () => {
+  it("应注册全部 59 个工具", async () => {
     const tools: any = await client.listTools();
-    expect(tools.tools.length).toBe(58);
+    expect(tools.tools.length).toBe(59);
     const names = tools.tools.map((t: any) => t.name).sort();
     expect(names).toEqual(
       [
@@ -60,7 +60,7 @@ describe("工具注册完整性", () => {
         "text_case", "text_dedup", "text_filter", "text_flip", "text_format",
         "text_fullwidth", "text_jianfan", "text_martian", "text_pinyin",
         "text_random", "text_replace", "text_stats", "text_vertical",
-        "text_idcard", "unit_convert", "uuid_generate", "xpath_tool",
+        "text_idcard", "time_timestamp", "unit_convert", "uuid_generate", "xpath_tool",
       ].sort(),
     );
   });
@@ -548,6 +548,48 @@ describe("misc 族（5）", () => {
     expect(r5.carrier).toBe("中国广电");
     const bad = JSON.parse(await call("net_phone_owner", { phone: "12345" }));
     expect(bad.valid).toBe(false);
+  });
+  it("time_timestamp: 秒/毫秒自动识别与输出", async () => {
+    const s = JSON.parse(await call("time_timestamp", { value: "1700000000" }));
+    expect(s.timestamp.seconds).toBe("1700000000");
+    expect(s.timestamp.milliseconds).toBe("1700000000000");
+    expect(s.datetime.utc).toBe("2023-11-14 22:13:20");
+    expect(["周二", "周三"]).toContain(s.info.weekday); // UTC=周二，本地(+08:00)=周三
+    const ms = JSON.parse(await call("time_timestamp", { value: "1700000000000" }));
+    expect(ms.timestamp.seconds).toBe("1700000000");
+    expect(ms.input.unit).toBe("ms");
+  });
+  it("time_timestamp: 微秒/纳秒精度与余数提示", async () => {
+    const us = JSON.parse(await call("time_timestamp", { value: "1700000000000000" }));
+    expect(us.timestamp.seconds).toBe("1700000000");
+    expect(us.input.unit).toBe("us");
+    const ns = JSON.parse(await call("time_timestamp", { value: "1700000000000000000" }));
+    expect(ns.timestamp.seconds).toBe("1700000000");
+    expect(ns.input.unit).toBe("ns");
+    const r = JSON.parse(await call("time_timestamp", { value: "1700000000123", unit: "us" }));
+    expect(r.input.raw).toContain("余 123 微秒");
+  });
+  it("time_timestamp: 日期字符串/相对时间/时区", async () => {
+    // 带时区的 ISO 输入：秒数与时区无关，稳定断言
+    const iso = JSON.parse(await call("time_timestamp", { value: "2026-08-12T15:30:00+08:00" }));
+    expect(iso.timestamp.seconds).toBe("1786519800");
+    expect(iso.info.weekday).toBe("周三");
+    const tz = JSON.parse(await call("time_timestamp", { value: "1700000000", timezone: "UTC" }));
+    expect(tz.datetime.timezone ?? tz.datetime.utc).toBe("2023-11-14 22:13:20");
+    expect(tz.info.timezone).toBe("UTC");
+    const rel = JSON.parse(await call("time_timestamp", { value: "now+1d" }));
+    expect(rel.input.type).toBe("datetime");
+    const cn = JSON.parse(await call("time_timestamp", { value: "2026年8月12日 15:30:00" }));
+    expect(cn.input.type).toBe("datetime");
+    const d = JSON.parse(await call("time_timestamp", { value: "2026-08-12 15:30:00" }));
+    expect(d.input.type).toBe("datetime");
+  });
+  it("time_timestamp: 当前时间与非法输入", async () => {
+    const now = JSON.parse(await call("time_timestamp", {}));
+    expect(now.input.type).toBe("now");
+    expect(Number(now.timestamp.seconds)).toBeGreaterThan(1700000000);
+    await expectError("time_timestamp", { value: "not-a-date" });
+    await expectError("time_timestamp", { value: "1700000000", timezone: "abc" });
   });
 });
 

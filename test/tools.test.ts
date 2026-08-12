@@ -41,9 +41,9 @@ async function expectError(name: string, args: Record<string, unknown>): Promise
 }
 
 describe("工具注册完整性", () => {
-  it("应注册全部 58 个工具", async () => {
+  it("应注册全部 63 个工具", async () => {
     const tools: any = await client.listTools();
-    expect(tools.tools.length).toBe(58);
+    expect(tools.tools.length).toBe(63);
     const names = tools.tools.map((t: any) => t.name).sort();
     expect(names).toEqual(
       [
@@ -60,7 +60,8 @@ describe("工具注册完整性", () => {
         "text_case", "text_dedup", "text_filter", "text_flip", "text_format",
         "text_fullwidth", "text_jianfan", "text_martian", "text_pinyin",
         "text_random", "text_replace", "text_stats", "text_vertical",
-        "text_idcard", "time_timestamp", "unit_convert", "uuid_generate", "xpath_tool",
+        "text_idcard", "time_convert", "time_cron", "time_diff", "time_duration",
+        "time_format", "time_timestamp", "unit_convert", "uuid_generate", "xpath_tool",
       ].sort(),
     );
   });
@@ -563,6 +564,54 @@ describe("misc 族（5）", () => {
     expect(Number(now.timestamp.seconds)).toBeGreaterThan(1700000000);
     await expectError("time_timestamp", { value: "not-a-date" });
     await expectError("time_timestamp", { value: "1700000000", timezone: "abc" });
+  });
+  it("time_convert: 多时区对照", async () => {
+    const r = JSON.parse(await call("time_convert", { value: "1700000000" }));
+    expect(r.timezones.length).toBe(8);
+    expect(r.timezones.every((z: any) => !Number.isNaN(z.offset) && !z.datetime.includes("NaN"))).toBe(true);
+    const bj = r.timezones.find((z: any) => z.name === "北京");
+    expect(bj.datetime).toBe("2023-11-15 06:13:20");
+    const custom = JSON.parse(await call("time_convert", { value: "1700000000", timezones: "UTC,+09:00" }));
+    expect(custom.timezones.length).toBe(2);
+    expect(custom.timezones[1].offset).toBe("+09:00");
+  });
+  it("time_diff: 时间差与倒计时", async () => {
+    const r = JSON.parse(await call("time_diff", { from: "2026-08-12 15:30:00", to: "2026-08-15 18:00:00" }));
+    expect(r.direction).toBe("未来");
+    expect(r.diff.days).toBe("3.10");
+    expect(r.diff.human).toContain("3天");
+    expect(r.diff.components.hours).toBe(2);
+    expect(r.diff.components.minutes).toBe(30);
+    const past = JSON.parse(await call("time_diff", { from: "2026-08-15 18:00:00", to: "2026-08-12 15:30:00" }));
+    expect(past.direction).toBe("过去");
+  });
+  it("time_cron: 描述与执行时间", async () => {
+    const r = JSON.parse(await call("time_cron", { expr: "*/5 * * * *", count: 3 }));
+    expect(r.description).toContain("每5分钟");
+    expect(r.next_runs.length).toBe(3);
+    const w = JSON.parse(await call("time_cron", { expr: "0 9 * * 1-5", count: 1 }));
+    expect(w.description).toContain("09:00");
+    expect(w.description).toContain("周一至周五");
+    await expectError("time_cron", { expr: "bad expr" });
+  });
+  it("time_duration: 正向转换与反向解析", async () => {
+    const r = JSON.parse(await call("time_duration", { value: "93784" }));
+    expect(r.mode).toBe("转换");
+    expect(r.duration.human).toBe("1天2小时3分4秒");
+    expect(r.duration.components.days).toBe(1);
+    const back = JSON.parse(await call("time_duration", { value: "1天2小时3分4秒" }));
+    expect(back.mode).toBe("解析");
+    expect(back.seconds).toBe(93784);
+    const ms = JSON.parse(await call("time_duration", { value: "90000", unit: "ms" }));
+    expect(ms.duration.human).toBe("1分30秒");
+  });
+  it("time_format: 占位符与 strftime 兼容", async () => {
+    const cn = JSON.parse(await call("time_format", { value: "1700000000", format: "YYYY年MM月DD日 HH:mm:ss ddd" }));
+    expect(cn.output).toBe("2023年11月15日 06:13:20 周三");
+    const sf = JSON.parse(await call("time_format", { value: "1700000000", format: "%Y-%m-%d %H:%M:%S %A", timezone: "UTC" }));
+    expect(sf.output).toBe("2023-11-14 22:13:20 Tuesday");
+    const q = JSON.parse(await call("time_format", { value: "1700000000", format: "Q季度 d" }));
+    expect(q.output).toContain("4季度");
   });
 });
 

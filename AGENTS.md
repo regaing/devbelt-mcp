@@ -5,10 +5,10 @@
 ## 仓库结构
 
 - **根目录即主项目** — AI 工具 MCP server（包名 `@lingxi-agent/devbelt-mcp`），TypeScript + Node.js ≥18，
-  提供 58 个在线工具（编码/加解密/代码格式化/JSON/文本/单位换算/网络查询/二维码等），零数据库。
+  提供 63 个在线工具（编码/加解密/代码格式化/JSON/文本/单位换算/网络查询/二维码等），零数据库。
   - `src/tools/` 按功能族组织（encode/crypto/code/json/data/text/unit/net/misc）
   - `src/lib/units.ts` 单位换算常量表
-  - `test/tools.test.ts` 78 个端到端测试
+  - `test/tools.test.ts` 83 个端到端测试
   - 开发命令：`npm run build`（tsc）、`npm test`（vitest）、`npm run dev`（tsx）
   - 产物：`dist/index.js`（stdio server）
 

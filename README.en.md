@@ -6,7 +6,7 @@
 
 # 🧰 devbelt-mcp
 
-**An online toolbox for AI assistants — 63 everyday utilities, callable with plain language**
+**An online toolbox for AI assistants — 77 everyday utilities, callable with plain language**
 
 JSON · Encryption · Code Formatting · Text Conversion · Unit Conversion · Network Lookup · QR Code
 
@@ -15,14 +15,14 @@ JSON · Encryption · Code Formatting · Text Conversion · Unit Conversion · N
 ![language](https://img.shields.io/badge/language-TypeScript-3178c6)
 ![node](https://img.shields.io/badge/node-%3E%3D18-339933)
 ![mcp](https://img.shields.io/badge/MCP-stdio-8b5cf6)
-![tools](https://img.shields.io/badge/tools-63%20tools%20%7C%20170%2B%20capabilities-4fc3f7)
-![tests](https://img.shields.io/badge/tests-83%20passing-2ea44f)
+![tools](https://img.shields.io/badge/tools-77%20tools%20%7C%20170%2B%20capabilities-4fc3f7)
+![tests](https://img.shields.io/badge/tests-97%20passing-2ea44f)
 
 </div>
 
 ## 📖 What is this?
 
-`devbelt-mcp` packages **63 everyday online utilities** (with **170+ granular capabilities**) into interfaces **AI can call directly** — think of it as equipping an AI with an online toolbox.
+`devbelt-mcp` packages **77 everyday online utilities** (with **170+ granular capabilities**) into interfaces **AI can call directly** — think of it as equipping an AI with an online toolbox.
 
 Once connected to an AI client (LingXi / Claude Desktop / etc.), just talk to the AI in plain language:
 
@@ -51,7 +51,7 @@ More examples in [💬 Example Prompts](#-example-prompts) below.
 
 Built on **MCP** (Model Context Protocol, the open standard for AI tools — think of it as "USB-C for AI"), connected to local AI clients via **stdio**. Everything runs locally: zero database, no external service dependencies (except the MIIT ICP interface).
 
-> 💡 For the best experience, use the **LingXi AI Assistant** ([https://lingxi.regaing.com](https://lingxi.regaing.com)) to connect to this server and get the full AI experience across 63 tools · 170+ capabilities.
+> 💡 For the best experience, use the **LingXi AI Assistant** ([https://lingxi.regaing.com](https://lingxi.regaing.com)) to connect to this server and get the full AI experience across 77 tools · 170+ capabilities.
 
 ## 💬 Example Prompts
 
@@ -132,18 +132,18 @@ Ask the AI in plain language — it will pick the right tool automatically:
 
 ## ✨ Features
 
-- 🚀 **63 tools · 170+ granular capabilities**: encoding / encryption / code formatting / JSON / text / units / network / QR codes (e.g. one `crypto_hash` tool covers 12 hashing algorithms; `code_format` covers 18 languages)
+- 🚀 **77 tools · 170+ granular capabilities**: encoding / encryption / code formatting / JSON / text / units / network / QR codes (e.g. one `crypto_hash` tool covers 12 hashing algorithms; `code_format` covers 18 languages)
 - 🧩 **Modern crypto standards**: AES-GCM/CBC (`node:crypto`), no legacy algorithms
 - ⚡ **stdio direct connection**: runs locally, zero database, stateless
 - 🛡️ **Unified error handling**: exceptions become readable text, never raw stack traces
-- ✅ **83 end-to-end tests**: real server via InMemoryTransport, including golden regression
+- ✅ **97 end-to-end tests**: real server via InMemoryTransport, including golden regression
 
 ## 🚀 Quick Start
 
 ```bash
 npm install
 npm run build        # compile to dist/
-npm test             # run the 83 end-to-end tests
+npm test             # run the 97 end-to-end tests
 node dist/index.js   # start the stdio server
 ```
 
@@ -201,9 +201,9 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 }
 ```
 
-## 🧰 Tool Inventory (63 tools · 170+ capabilities)
+## 🧰 Tool Inventory (77 tools · 170+ capabilities)
 
-### Encoding `encode_*` (7)
+### Encoding `encode_*` (9)
 | Tool | Description |
 |---|---|
 | `encode_url` | URL encode/decode |
@@ -213,8 +213,10 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 | `encode_ascii` | ASCII encode/decode |
 | `encode_escape` | Escape encode/decode |
 | `encode_radix` | Base conversion (2~36, big numbers) |
+| `encode_detect` | Text encoding detection (UTF-8/GBK/GB2312 etc.) |
+| `encode_html` | HTML entity encode/decode (&lt;&gt;&amp; etc.) |
 
-### Encryption & Hashing `crypto_*` (5)
+### Encryption & Hashing `crypto_*` (8)
 | Tool | Description |
 |---|---|
 | `crypto_hash` | MD5 (16/32-bit) / SHA family / HMAC |
@@ -222,6 +224,9 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 | `crypto_morse` | Morse code (Chinese auto-converted to pinyin) |
 | `crypto_download_url` | Thunder/FlashGet/QQ download URL encode/decode |
 | `color_convert` | HEX ↔ RGB conversion |
+| `crypto_jwt` | JWT decode & verify (HS256) |
+| `crypto_rsa` | RSA asymmetric crypto/signature (keygen/encrypt/decrypt/sign/verify) |
+| `crypto_password_hash` | bcrypt password hash & verify |
 
 ### Code `code_*` (5)
 | Tool | Description |
@@ -232,19 +237,19 @@ net_websocket_test(url: "wss://echo.websocket.org", messages: ["hello"], ping: t
 | `regex_generate` | Regex code generation in 7 languages |
 | `xpath_tool` | Lightweight XPath extraction |
 
-### JSON `json_*` (3)
-`json_process` (format/minify/escape/validate), `json_convert` (↔XML/YAML/GET params), `json_entity` (generate C#/Java/Go entity classes; SQL→Java)
+### JSON `json_*` (5)
+`json_process` (format/minify/escape/validate), `json_convert` (↔XML/YAML/GET params), `json_entity` (generate C#/Java/Go entity classes; SQL→Java), `json_path` (JSONPath extraction), `json_schema_validate` (JSON Schema validation)
 
-### Data `data_*` (4)
-`data_html_convert` (HTML↔JS/PHP/C#/JSP/ASP/Perl/UBB/Markdown), `data_html_table` (CSV/JSON→HTML table), `data_excel_json` (Excel↔JSON), `data_text_diff` (text diff)
+### Data `data_*` (5)
+`data_html_convert` (HTML↔JS/PHP/C#/JSP/ASP/Perl/UBB/Markdown), `data_html_table` (CSV/JSON→HTML table), `data_excel_json` (Excel↔JSON), `data_text_diff` (text diff), `data_csv` (CSV parse/generate)
 
-### Text `text_*` (15)
-Case conversion, simplified/traditional Chinese, pinyin, fullwidth/halfwidth, flip, vertical text, char count, dedup, replace, HTML filter, auto-format, random numbers/passwords, Martian text, UUID/GUID generation, `text_idcard` (ID-card parse: GB 11643 checksum / 15→18 upgrade / region / birthdate / gender)
+### Text `text_*` (16)
+Case conversion, simplified/traditional Chinese, pinyin, fullwidth/halfwidth, flip, vertical text, char count, dedup, replace, HTML filter, auto-format, random numbers/passwords, Martian text, UUID/GUID generation, `text_idcard` (ID-card parse), `text_password_strength` (password strength scoring)
 
 ### Unit Conversion `unit_convert` (1)
 13 categories: length / area / volume / speed / pressure / power / heat / force / time / data size / angle / density / temperature
 
-### Network Lookup `net_*` (11)
+### Network Lookup `net_*` (14)
 | Tool | Description | Dependency |
 |---|---|---|
 | `net_whois` | WHOIS lookup (**native implementation**, recursive via whois.iana.org) | none |
@@ -258,9 +263,12 @@ Case conversion, simplified/traditional Chinese, pinyin, fullwidth/halfwidth, fl
 | `net_meta_analyze` | Meta tag analysis | direct request |
 | `net_keyword_density` | Keyword density check | direct request |
 | `net_websocket_test` | Full WebSocket session (message exchange / ping RTT / wait_for) | ws package |
+| `net_http_request` | HTTP request debugging (curl-equivalent: JSON auto-serialize/multipart upload/redirect/timeout) | native fetch |
+| `net_ssl_check` | SSL certificate check (validity/issuer/chain) | node:tls |
+| `net_port_check` | TCP port connectivity (tcping equivalent) | node:net |
 
-### Misc `misc_*` (6)
-`misc_barcode` (barcode), `misc_qrcode` (QR code), `misc_favicon` (PNG→ICO), `misc_shortcut` (desktop shortcut), `misc_reference` (17 reference tables), `misc_calendar` (lunar calendar: lunar/ganzhi/zodiac/solar terms/festivals/yiji, lunar-typescript local)
+### Misc `misc_*` (8)
+`misc_barcode` (barcode), `misc_qrcode` (QR code), `misc_qrcode_decode` (QR decode), `misc_calc` (math expression evaluation), `misc_favicon` (PNG→ICO), `misc_shortcut` (desktop shortcut), `misc_reference` (17 reference tables), `misc_calendar` (lunar calendar: lunar/ganzhi/zodiac/solar terms/festivals/yiji, lunar-typescript local)
 
 ### Time `time_*` (6)
 | Tool | Description |
@@ -274,7 +282,7 @@ Case conversion, simplified/traditional Chinese, pinyin, fullwidth/halfwidth, fl
 
 ## 🏗️ Design Notes
 
-- **Aggregated granularity**: tools of the same family share one schema (e.g. `crypto_hash(text, algorithm)` covers the whole MD5/SHA family); 63 tools cover every tool category
+- **Aggregated granularity**: tools of the same family share one schema (e.g. `crypto_hash(text, algorithm)` covers the whole MD5/SHA family); 77 tools cover every tool category
 - **Unified error handling**: every tool returns a readable error text (with valid option hints), never a raw stack trace
 - **Modern crypto**: symmetric encryption built on `node:crypto` (AES-GCM/CBC)
 - **Reference tables**: 17 lookup tables (HTTP status codes / ports / DNS / dynasties / ethnic groups, etc.) consolidated into a single `misc_reference` tool
@@ -285,8 +293,8 @@ Case conversion, simplified/traditional Chinese, pinyin, fullwidth/halfwidth, fl
 npm test
 ```
 
-83 end-to-end tests (real server via InMemoryTransport) cover:
-- All 63 tool invocations
+97 end-to-end tests (real server via InMemoryTransport) cover:
+- All 77 tool invocations
 - Standard input/output golden regression (`md5('abc')`, base conversion, unit conversion, etc.)
 - Network tools verified against local mock HTTP/WebSocket servers
 - Error paths (invalid params, decryption failure, connection failure)

@@ -6,6 +6,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import fs from "node:fs";
 import path from "node:path";
+import jschardet from "jschardet";
 import { McpToolError, guard } from "../utils/errors.js";
 
 export function registerEncodeTools(server: McpServer): void {
@@ -179,6 +180,60 @@ export function registerEncodeTools(server: McpServer): void {
         if (e instanceof McpToolError) throw e;
         throw new McpToolError(`进制转换失败：${e?.message ?? e}`, "RADIX");
       }
+    }),
+  );
+
+  /* ---------------- 文本编码检测（jschardet） ---------------- */
+  server.tool(
+    "encode_detect",
+    "文本编码检测（jschardet）：检测字符串/文件的字符编码（UTF-8/GBK/GB2312/UTF-16 等）",
+    {
+      text: z.string().optional().describe("待检测文本（与 file_path 二选一）"),
+      file_path: z.string().optional().describe("待检测文件路径（与 text 二选一）"),
+    },
+    guard(({ text, file_path }) => {
+      let buf: Buffer;
+      if (file_path) {
+        if (!fs.existsSync(file_path)) throw new McpToolError(`文件不存在：${file_path}`, "FILE_NOT_FOUND");
+        buf = fs.readFileSync(file_path);
+      } else if (text !== undefined) {
+        buf = Buffer.from(text, "utf8");
+      } else {
+        throw new McpToolError("需要 text 或 file_path 参数", "INVALID_PARAM");
+      }
+      const r = jschardet.detect(buf);
+      return JSON.stringify({
+        encoding: r.encoding,
+        confidence: r.confidence,
+        source: file_path ?? "text",
+        bytes: buf.length,
+      }, null, 2);
+    }),
+  );
+
+  /* ---------------- HTML 实体编解码 ---------------- */
+  server.tool(
+    "encode_html",
+    "HTML 实体编解码：<>&\"' 与 &lt;&gt;&amp;&quot;&#39; 互转（支持数字实体）",
+    {
+      text: z.string().describe("待处理文本"),
+      action: z.enum(["encode", "decode"]).default("encode"),
+    },
+    guard(({ text, action }) => {
+      if (action === "encode") {
+        return text
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;")
+          .replace(/"/g, "&quot;")
+          .replace(/'/g, "&#39;");
+      }
+      return text
+        .replace(/&#39;/g, "'")
+        .replace(/&quot;/g, "\"")
+        .replace(/&gt;/g, ">")
+        .replace(/&lt;/g, "<")
+        .replace(/&amp;/g, "&");
     }),
   );
 }

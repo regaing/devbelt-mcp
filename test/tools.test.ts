@@ -41,27 +41,32 @@ async function expectError(name: string, args: Record<string, unknown>): Promise
 }
 
 describe("工具注册完整性", () => {
-  it("应注册全部 63 个工具", async () => {
+  it("应注册全部 77 个工具", async () => {
     const tools: any = await client.listTools();
-    expect(tools.tools.length).toBe(63);
+    expect(tools.tools.length).toBe(77);
     const names = tools.tools.map((t: any) => t.name).sort();
     expect(names).toEqual(
       [
         "code_format", "code_obfuscate", "color_convert", "crypto_download_url",
-        "crypto_hash", "crypto_morse", "crypto_symmetric", "data_excel_json",
+        "crypto_hash", "crypto_jwt", "crypto_morse", "crypto_password_hash",
+        "crypto_rsa", "crypto_symmetric", "data_csv", "data_excel_json",
         "data_html_convert", "data_html_table", "data_text_diff", "encode_ascii",
-        "encode_base64", "encode_escape", "encode_radix", "encode_unicode",
-        "encode_url", "encode_utf8", "json_convert", "json_entity", "json_process",
-        "misc_barcode", "misc_favicon", "misc_qrcode", "misc_reference", "misc_shortcut",
-        "misc_calendar", "net_dead_link", "net_fetch", "net_gzip_check", "net_icp",
-        "net_ip_info", "net_dns_query", "net_keyword_density",
-        "net_meta_analyze", "net_url_status", "net_websocket_test", "net_whois",
-        "regex_generate", "regex_tool",
-        "text_case", "text_dedup", "text_filter", "text_flip", "text_format",
-        "text_fullwidth", "text_jianfan", "text_martian", "text_pinyin",
-        "text_random", "text_replace", "text_stats", "text_vertical",
-        "text_idcard", "time_convert", "time_cron", "time_diff", "time_duration",
-        "time_format", "time_timestamp", "unit_convert", "uuid_generate", "xpath_tool",
+        "encode_base64", "encode_detect", "encode_escape", "encode_html",
+        "encode_radix", "encode_unicode", "encode_url", "encode_utf8",
+        "json_convert", "json_entity", "json_path", "json_process",
+        "json_schema_validate", "misc_barcode", "misc_calc", "misc_calendar",
+        "misc_favicon", "misc_qrcode", "misc_qrcode_decode", "misc_reference",
+        "misc_shortcut", "net_dead_link", "net_dns_query", "net_fetch",
+        "net_gzip_check", "net_http_request", "net_icp", "net_ip_info",
+        "net_keyword_density", "net_meta_analyze", "net_port_check",
+        "net_ssl_check", "net_url_status", "net_websocket_test", "net_whois",
+        "regex_generate", "regex_tool", "text_case", "text_dedup",
+        "text_filter", "text_flip", "text_format", "text_fullwidth",
+        "text_idcard", "text_jianfan", "text_martian", "text_password_strength",
+        "text_pinyin", "text_random", "text_replace", "text_stats",
+        "text_vertical", "time_convert", "time_cron", "time_diff",
+        "time_duration", "time_format", "time_timestamp", "unit_convert",
+        "uuid_generate", "xpath_tool",
       ].sort(),
     );
   });
@@ -612,6 +617,125 @@ describe("misc 族（5）", () => {
     expect(sf.output).toBe("2023-11-14 22:13:20 Tuesday");
     const q = JSON.parse(await call("time_format", { value: "1700000000", format: "Q季度 d" }));
     expect(q.output).toContain("4季度");
+  });
+});
+
+describe("P0+P1 新增工具（14）", () => {
+  it("net_http_request: JSON POST（本地 mock）", async () => {
+    const http = await import("node:http");
+    const srv = http.createServer((req, res) => {
+      let body = "";
+      req.on("data", (c) => (body += c));
+      req.on("end", () => {
+        res.writeHead(200, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ method: req.method, body: JSON.parse(body || "{}"), ct: req.headers["content-type"] }));
+      });
+    });
+    await new Promise<void>((r) => srv.listen(0, "127.0.0.1", r));
+    const addr = srv.address() as any;
+    const base = `http://127.0.0.1:${addr.port}`;
+    try {
+      const r = JSON.parse(await call("net_http_request", { url: base, method: "POST", json: { hello: "world", n: 1 } }));
+      expect(r.status).toBe(200);
+      const echo = JSON.parse(r.body);
+      expect(echo.body.hello).toBe("world");
+      expect(echo.ct).toContain("application/json");
+    } finally {
+      await new Promise<void>((r) => srv.close(() => r()));
+    }
+  });
+  it("net_http_request: 非法 URL", async () => {
+    await expectError("net_http_request", { url: "not-a-url" });
+  });
+  it("net_http_request: 非法 URL", async () => {
+    await expectError("net_http_request", { url: "not-a-url" });
+  });
+  it("crypto_jwt: decode 与 verify", async () => {
+    const secret = "test-secret";
+    const header = Buffer.from(JSON.stringify({ alg: "HS256", typ: "JWT" })).toString("base64url");
+    const payload = Buffer.from(JSON.stringify({ sub: "123", name: "alice", exp: Math.floor(Date.now() / 1000) + 3600 })).toString("base64url");
+    const sig = createHmacHex(secret, `${header}.${payload}`, "sha256");
+    // 注意 base64url 转标准 base64 用于 hex 对比
+    const sigB64 = Buffer.from(sig, "hex").toString("base64url");
+    const token = `${header}.${payload}.${sigB64}`;
+    const dec = JSON.parse(await call("crypto_jwt", { token, action: "decode" }));
+    expect(dec.payload.name).toBe("alice");
+    expect(dec.expired).toBe(false);
+    const ver = JSON.parse(await call("crypto_jwt", { token, secret, action: "verify" }));
+    expect(ver.signature_valid).toBe(true);
+  });
+  it("crypto_jwt: 篡改签名", async () => {
+    const token = "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjMifQ.bad-signature";
+    const ver = JSON.parse(await call("crypto_jwt", { token, secret: "x", action: "verify" }));
+    expect(ver.signature_valid).toBe(false);
+  });
+  it("crypto_rsa: 加解密往返与签名验签", async () => {
+    const gen = JSON.parse(await call("crypto_rsa", { action: "generate", bits: 1024 }));
+    const pub = gen.public_key, priv = gen.private_key;
+    const enc = JSON.parse(await call("crypto_rsa", { action: "encrypt", data: "hello rsa", public_key: pub }));
+    const dec = JSON.parse(await call("crypto_rsa", { action: "decrypt", data: enc.ciphertext_base64, private_key: priv }));
+    expect(dec.plaintext).toBe("hello rsa");
+    const sig = JSON.parse(await call("crypto_rsa", { action: "sign", data: "msg", private_key: priv }));
+    const ver = JSON.parse(await call("crypto_rsa", { action: "verify", data: "msg", signature: sig.signature_base64, public_key: pub }));
+    expect(ver.valid).toBe(true);
+  });
+  it("crypto_password_hash: 哈希与校验", async () => {
+    const h = JSON.parse(await call("crypto_password_hash", { password: "s3cret", action: "hash", rounds: 4 }));
+    expect(h.hash.startsWith("$2")).toBe(true);
+    const ok = JSON.parse(await call("crypto_password_hash", { password: "s3cret", action: "verify", hash: h.hash }));
+    expect(ok.match).toBe(true);
+    const bad = JSON.parse(await call("crypto_password_hash", { password: "wrong", action: "verify", hash: h.hash }));
+    expect(bad.match).toBe(false);
+  });
+  it("json_path: 嵌套提取与过滤", async () => {
+    const json = '{"data":{"list":[{"name":"a","age":20},{"name":"b","age":30}]}}';
+    const r = JSON.parse(await call("json_path", { json, path: "$.data.list[0].name" }));
+    expect(r.matched).toBe(1);
+    expect(r.result[0]).toBe("a");
+    const all = JSON.parse(await call("json_path", { json, path: "$..name" }));
+    expect(all.matched).toBe(2);
+  });
+  it("json_schema_validate: 通过与失败", async () => {
+    const schema = '{"type":"object","required":["name"],"properties":{"name":{"type":"string"},"age":{"type":"integer","minimum":0}}}';
+    const ok = JSON.parse(await call("json_schema_validate", { json: '{"name":"a","age":1}', schema }));
+    expect(ok.valid).toBe(true);
+    const bad = JSON.parse(await call("json_schema_validate", { json: '{"age":-1}', schema }));
+    expect(bad.valid).toBe(false);
+    expect(bad.errors.length).toBeGreaterThan(0);
+  });
+  it("encode_detect: UTF-8 文本", async () => {
+    const r = JSON.parse(await call("encode_detect", { text: "hello 世界" }));
+    expect(r.encoding).toBeTruthy();
+    expect(r.bytes).toBeGreaterThan(0);
+  });
+  it("encode_html: 编解码往返", async () => {
+    const enc = await call("encode_html", { text: "<div class=\"a\">&amp;'</div>", action: "encode" });
+    expect(enc).toContain("&lt;");
+    expect(enc).toContain("&amp;");
+    const dec = await call("encode_html", { text: enc, action: "decode" });
+    expect(dec).toContain("<div");
+  });
+  it("misc_calc: 四则与函数", async () => {
+    const r = JSON.parse(await call("misc_calc", { expr: "2*(3+4)^2" }));
+    expect(Number(r.result)).toBe(98);
+    const s = JSON.parse(await call("misc_calc", { expr: "sin(pi/2)" }));
+    expect(Number(s.result)).toBeCloseTo(1, 5);
+    await expectError("misc_calc", { expr: "foo(1)" });
+  });
+  it("data_csv: parse 与 to_csv 往返", async () => {
+    const csv = "name,age\nalice,20\nbob,30";
+    const r = JSON.parse(await call("data_csv", { action: "parse", data: csv }));
+    expect(r.count).toBe(2);
+    expect(r.rows[0].name).toBe("alice");
+    const back = JSON.parse(await call("data_csv", { action: "to_csv", data: JSON.stringify(r.rows) }));
+    expect(back.csv).toContain("alice,20");
+  });
+  it("text_password_strength: 强弱评分", async () => {
+    const weak = JSON.parse(await call("text_password_strength", { password: "123456" }));
+    expect(weak.score).toBeLessThan(40);
+    const strong = JSON.parse(await call("text_password_strength", { password: "P@ssw0rd!Str0ng#2026" }));
+    expect(strong.score).toBeGreaterThan(60);
+    expect(strong.entropy_bits).toBeGreaterThan(50);
   });
 });
 

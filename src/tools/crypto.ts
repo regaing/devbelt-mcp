@@ -4,8 +4,9 @@
  */
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
-import { createHash, createHmac, createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createHash, createHmac, createCipheriv, createDecipheriv, randomBytes, generateKeyPairSync, publicEncrypt, privateDecrypt, sign, verify, constants } from "node:crypto";
 import { pinyin } from "pinyin-pro";
+import bcrypt from "bcryptjs";
 import { McpToolError, guard } from "../utils/errors.js";
 
 const HASH_ALGOS = [
@@ -221,6 +222,122 @@ export function registerCryptoTools(server: McpServer): void {
         return v;
       });
       return `#${r.toString(16).padStart(2, "0")}${g.toString(16).padStart(2, "0")}${b.toString(16).padStart(2, "0")}`.toUpperCase();
+    }),
+  );
+
+  /* ---------------- JWT 编解码（node:crypto HMAC） ---------------- */
+  server.tool(
+    "crypto_jwt",
+    "JWT 编解码与校验：解出 header/payload（不校验）、校验 HS256 签名与过期时间",
+    {
+      token: z.string().describe("JWT token（三段 base64url）"),
+      secret: z.string().optional().describe("HS256 密钥（verify 时必填）"),
+      action: z.enum(["decode", "verify"]).default("decode").describe("decode=仅解出，verify=校验签名+过期"),
+    },
+    guard(({ token, secret, action }) => {
+      const parts = token.trim().split(".");
+      if (parts.length !== 3) throw new McpToolError("JWT 格式无效（需 header.payload.signature 三段）", "INVALID");
+      const b64urlDecode = (s: string) => {
+        const b64 = s.replace(/-/g, "+").replace(/_/g, "/").padEnd(Math.ceil(s.length / 4) * 4, "=");
+        return JSON.parse(Buffer.from(b64, "base64").toString("utf8"));
+      };
+      const [headerB64, payloadB64, sigB64] = parts;
+      let header: any, payload: any;
+      try {
+        header = b64urlDecode(headerB64);
+        payload = b64urlDecode(payloadB64);
+      } catch {
+        throw new McpToolError("JWT 无法解析（header/payload 不是有效 base64url JSON）", "DECODE");
+      }
+      if (action === "decode") {
+        return JSON.stringify({
+          header, payload,
+          signature: sigB64,
+          exp: payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
+          expired: payload.exp ? payload.exp * 1000 < Date.now() : null,
+        }, null, 2);
+      }
+      // verify
+      if (!secret) throw new McpToolError("verify 需要 secret 参数", "INVALID_PARAM");
+      const expected = createHmac("sha256", secret).update(`${headerB64}.${payloadB64}`).digest("base64url");
+      const sigValid = expected === sigB64;
+      const expired = payload.exp ? payload.exp * 1000 < Date.now() : false;
+      return JSON.stringify({
+        signature_valid: sigValid,
+        expired,
+        header, payload,
+        exp_at: payload.exp ? new Date(payload.exp * 1000).toISOString() : null,
+      }, null, 2);
+    }),
+  );
+
+  /* ---------------- RSA 非对称加解密（node:crypto） ---------------- */
+  server.tool(
+    "crypto_rsa",
+    "RSA 非对称加解密与签名：生成密钥对/公钥加密/私钥解密/私钥签名/公钥验签",
+    {
+      action: z.enum(["generate", "encrypt", "decrypt", "sign", "verify"]).describe("操作类型"),
+      data: z.string().optional().describe("待处理文本（encrypt/decrypt/sign/verify 时）"),
+      signature: z.string().optional().describe("base64 签名（verify 时）"),
+      public_key: z.string().optional().describe("PEM 公钥（encrypt/verify）"),
+      private_key: z.string().optional().describe("PEM 私钥（decrypt/sign）"),
+      bits: z.number().int().min(1024).max(4096).default(2048).describe("密钥位数（generate）"),
+    },
+    guard(({ action, data, signature, public_key, private_key, bits }) => {
+      if (action === "generate") {
+        const { publicKey, privateKey } = generateKeyPairSync("rsa", {
+          modulusLength: bits,
+          publicKeyEncoding: { type: "spki", format: "pem" },
+          privateKeyEncoding: { type: "pkcs8", format: "pem" },
+        });
+        return JSON.stringify({ bits, public_key: publicKey, private_key: privateKey }, null, 2);
+      }
+      if (!data) throw new McpToolError("需要 data 参数", "INVALID_PARAM");
+      try {
+        if (action === "encrypt") {
+          if (!public_key) throw new McpToolError("encrypt 需要 public_key", "INVALID_PARAM");
+          const enc = publicEncrypt({ key: public_key, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: "sha256" }, Buffer.from(data, "utf8"));
+          return JSON.stringify({ ciphertext_base64: enc.toString("base64") }, null, 2);
+        }
+        if (action === "decrypt") {
+          if (!private_key) throw new McpToolError("decrypt 需要 private_key", "INVALID_PARAM");
+          const buf = Buffer.from(data, "base64");
+          const dec = privateDecrypt({ key: private_key, padding: constants.RSA_PKCS1_OAEP_PADDING, oaepHash: "sha256" }, buf);
+          return JSON.stringify({ plaintext: dec.toString("utf8") }, null, 2);
+        }
+        if (action === "sign") {
+          if (!private_key) throw new McpToolError("sign 需要 private_key", "INVALID_PARAM");
+          const sig = sign("sha256", Buffer.from(data, "utf8"), { key: private_key, padding: constants.RSA_PKCS1_PSS_PADDING });
+          return JSON.stringify({ signature_base64: sig.toString("base64") }, null, 2);
+        }
+        // verify
+        if (!public_key) throw new McpToolError("verify 需要 public_key", "INVALID_PARAM");
+        if (!signature) throw new McpToolError("verify 需要 signature 参数", "INVALID_PARAM");
+        const valid = verify("sha256", Buffer.from(data, "utf8"), { key: public_key, padding: constants.RSA_PKCS1_PSS_PADDING }, Buffer.from(signature, "base64"));
+        return JSON.stringify({ valid }, null, 2);
+      } catch (e: any) {
+        throw new McpToolError(`RSA 操作失败：${e?.message ?? e}`, "RSA");
+      }
+    }),
+  );
+
+  /* ---------------- bcrypt 密码哈希 ---------------- */
+  server.tool(
+    "crypto_password_hash",
+    "bcrypt 密码哈希与校验（bcryptjs 纯 JS）：注册/登录场景的密码存储与验证",
+    {
+      password: z.string().describe("密码明文"),
+      action: z.enum(["hash", "verify"]).default("hash").describe("hash=生成哈希，verify=校验"),
+      hash: z.string().optional().describe("已存 bcrypt 哈希（verify 时）"),
+      rounds: z.number().int().min(4).max(15).default(10).describe("bcrypt cost 因子（hash）"),
+    },
+    guard(({ password, action, hash, rounds }) => {
+      if (action === "hash") {
+        const h = bcrypt.hashSync(password, rounds);
+        return JSON.stringify({ hash: h, rounds }, null, 2);
+      }
+      if (!hash) throw new McpToolError("verify 需要 hash 参数", "INVALID_PARAM");
+      return JSON.stringify({ match: bcrypt.compareSync(password, hash) }, null, 2);
     }),
   );
 }

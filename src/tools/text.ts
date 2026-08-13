@@ -349,4 +349,51 @@ export function registerTextTools(server: McpServer): void {
     { id: z.string().describe("15 或 18 位身份证号") },
     guard(({ id }) => JSON.stringify(parseIdCard(id), null, 2)),
   );
+  /* ---------------- 密码强度评估 ---------------- */
+  server.tool(
+    "text_password_strength",
+    "密码强度评估：基于长度/字符集/熵计算评分（0-100），返回强度等级与改进建议",
+    {
+      password: z.string().describe("待评估密码"),
+    },
+    guard(({ password }) => {
+      if (!password) return JSON.stringify({ score: 0, level: "极弱", entropy_bits: 0 }, null, 2);
+      const len = password.length;
+      let charset = 0;
+      if (/[a-z]/.test(password)) charset += 26;
+      if (/[A-Z]/.test(password)) charset += 26;
+      if (/[0-9]/.test(password)) charset += 10;
+      if (/[^a-zA-Z0-9]/.test(password)) charset += 33;
+      const entropy = len * Math.log2(charset || 1);
+      // 常见弱模式扣分
+      let penalty = 0;
+      const checks: Array<[RegExp, string, number]> = [
+        [/^[a-z]+$/, "纯小写", 15],
+        [/^[0-9]+$/, "纯数字", 20],
+        [/^[A-Za-z]+$/, "纯字母", 10],
+        [/^(.)\1+$/, "单字符重复", 30],
+        [/^12345|qwerty|password|abc123|admin/i, "常见弱密码", 35],
+      ];
+      const warnings: string[] = [];
+      for (const [re, label, p] of checks) {
+        if (re.test(password)) { penalty += p; warnings.push(label); }
+      }
+      if (len < 8) { penalty += 20; warnings.push("长度不足 8 位"); }
+      if (len < 12) { penalty += 5; }
+      const score = Math.max(0, Math.min(100, Math.round(entropy * 1.5 - penalty)));
+      const level = score >= 80 ? "强" : score >= 60 ? "中" : score >= 40 ? "弱" : "极弱";
+      const suggestions: string[] = [];
+      if (len < 12) suggestions.push("增加到 12 位以上");
+      if (charset < 60) suggestions.push("混合大小写+数字+符号");
+      if (warnings.length) suggestions.push(`避免：${warnings.join("、")}`);
+      return JSON.stringify({
+        score, level,
+        length: len,
+        charset_size: charset,
+        entropy_bits: Math.round(entropy * 10) / 10,
+        warnings,
+        suggestions,
+      }, null, 2);
+    }),
+  );
 }

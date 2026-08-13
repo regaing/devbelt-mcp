@@ -4,6 +4,8 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { z } from "zod";
 import yaml from "js-yaml";
+import { JSONPath } from "jsonpath-plus";
+import { Ajv } from "ajv";
 import { McpToolError, guard } from "../utils/errors.js";
 
 /** 解析 JSON，抛可读错误 */
@@ -337,6 +339,59 @@ export function registerJsonTools(server: McpServer): void {
       }
       let code = jsonToEntityCode(input, language);
       return code;
+    }),
+  );
+  /* ---------------- JSONPath 提取 ---------------- */
+  server.tool(
+    "json_path",
+    "JSONPath 提取（jsonpath-plus 完整语法）：从 JSON 按路径提取（如 $.data.list[0].name / $..name / $.list[?(@.age>18)]）",
+    {
+      json: z.string().describe("JSON 字符串"),
+      path: z.string().describe("JSONPath 表达式（如 $.data.list[0].name）"),
+    },
+    guard(({ json, path }) => {
+      const data = parseJson(json);
+      try {
+        const result = JSONPath({ path, json: data as any });
+        return JSON.stringify({ path, matched: result.length, result }, null, 2);
+      } catch (e: any) {
+        throw new McpToolError(`JSONPath 无效：${e?.message ?? e}`, "JSONPATH");
+      }
+    }),
+  );
+
+  /* ---------------- JSON Schema 校验 ---------------- */
+  server.tool(
+    "json_schema_validate",
+    "JSON Schema 校验（ajv，draft-07）：校验 JSON 数据是否符合 schema，返回详细错误",
+    {
+      json: z.string().describe("待校验的 JSON 字符串"),
+      schema: z.string().describe("JSON Schema 字符串（draft-07）"),
+    },
+    guard(({ json, schema }) => {
+      const data = parseJson(json);
+      let schemaObj: unknown;
+      try {
+        schemaObj = JSON.parse(schema);
+      } catch {
+        throw new McpToolError("schema 不是有效 JSON", "SCHEMA");
+      }
+      try {
+        const ajv = new Ajv({ allErrors: true });
+        const validate = ajv.compile(schemaObj as any);
+        const valid = validate(data);
+        return JSON.stringify({
+          valid,
+          errors: valid ? [] : (validate.errors ?? []).map((e: any) => ({
+            path: e.instancePath || "/",
+            keyword: e.keyword,
+            message: e.message,
+            params: e.params,
+          })),
+        }, null, 2);
+      } catch (e: any) {
+        throw new McpToolError(`Schema 编译失败：${e?.message ?? e}`, "SCHEMA");
+      }
     }),
   );
 }

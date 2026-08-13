@@ -7,6 +7,9 @@ import fs from "node:fs";
 import path from "node:path";
 import bwipjs from "bwip-js";
 import QRCode from "qrcode";
+import jsQR from "jsqr";
+import { PNG } from "pngjs";
+import { evaluate, format } from "mathjs";
 import { Solar } from "lunar-typescript";
 import { McpToolError, guard } from "../utils/errors.js";
 /* ---------------- ICO 封装（PNG 数据直接嵌入，Vista+ 支持） ---------------- */
@@ -300,6 +303,60 @@ export function registerMiscTools(server: McpServer): void {
         yi: lunar.getDayYi(),
         ji: lunar.getDayJi(),
       }, null, 2);
+    }),
+  );
+  /* ---------------- 二维码解码（jsqr + pngjs） ---------------- */
+  server.tool(
+    "misc_qrcode_decode",
+    "二维码解码（jsqr + pngjs）：从 PNG 图片识别二维码内容（本地路径或 base64 dataURL）",
+    {
+      image: z.string().describe("图片路径或 base64 dataURL（data:image/png;base64,...）"),
+    },
+    guard(({ image }) => {
+      let buf: Buffer;
+      if (image.startsWith("data:")) {
+        const b64 = image.split(",")[1] ?? "";
+        buf = Buffer.from(b64, "base64");
+      } else {
+        if (!fs.existsSync(image)) throw new McpToolError(`文件不存在：${image}`, "FILE_NOT_FOUND");
+        buf = fs.readFileSync(image);
+      }
+      let png: PNG;
+      try {
+        png = PNG.sync.read(buf);
+      } catch {
+        throw new McpToolError("图片解析失败（仅支持 PNG）", "DECODE");
+      }
+      const code = (jsQR as any)(new Uint8ClampedArray(png.data), png.width, png.height);
+      if (!code) return JSON.stringify({ decoded: false, message: "未识别到二维码" }, null, 2);
+      return JSON.stringify({
+        decoded: true,
+        content: code.data,
+        version: code.version,
+        location: code.location,
+      }, null, 2);
+    }),
+  );
+
+  /* ---------------- 数学表达式计算（mathjs） ---------------- */
+  server.tool(
+    "misc_calc",
+    "数学表达式计算（mathjs）：支持四则/函数/常量/矩阵（如 2*(3+4)^2、sin(pi/2)、sqrt(16)）",
+    {
+      expr: z.string().describe("数学表达式"),
+      precision: z.number().int().min(1).max(15).default(10).describe("结果精度（有效位数）"),
+    },
+    guard(({ expr, precision }) => {
+      try {
+        const result = evaluate(expr);
+        return JSON.stringify({
+          expr,
+          result: format(result, { precision }),
+          type: typeof result,
+        }, null, 2);
+      } catch (e: any) {
+        throw new McpToolError(`表达式计算失败：${e?.message ?? e}`, "CALC");
+      }
     }),
   );
 }

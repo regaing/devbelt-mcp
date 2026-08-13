@@ -2,8 +2,8 @@
 /**
  * devbelt-mcp — AI 工具 MCP server
  *
- * 提供 63 个在线工具：
- *   encode(7) / crypto(5) / code(5) / json(3) / data(4) / text(15) / unit(1) / net(11) / misc(6) / time(6)
+ * 提供 77 个在线工具：
+ *   encode(9) / crypto(8) / code(5) / json(5) / data(5) / text(16) / unit(1) / net(14) / misc(8) / time(6)
  */
 import { pathToFileURL } from "node:url";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";

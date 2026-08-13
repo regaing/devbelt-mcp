@@ -226,4 +226,48 @@ export function registerDataTools(server: McpServer): void {
         .join("");
     }),
   );
+  /* ---------------- CSV 处理（复用 xlsx） ---------------- */
+  server.tool(
+    "data_csv",
+    "CSV 处理（复用 xlsx）：解析 CSV→JSON / JSON→CSV，支持文件或文本输入",
+    {
+      action: z.enum(["parse", "to_csv"]).describe("parse=CSV→JSON，to_csv=JSON→CSV"),
+      data: z.string().describe("CSV 文本 / JSON 数组字符串 / 文件路径（.csv 或 .json）"),
+      delimiter: z.string().default(",").describe("CSV 分隔符（parse，默认逗号）"),
+    },
+    guard(({ action, data, delimiter }) => {
+      let text = data;
+      // 若为文件路径，读文件
+      if (data.endsWith(".csv") && fs.existsSync(data)) text = fs.readFileSync(data, "utf8");
+      else if (data.endsWith(".json") && fs.existsSync(data)) text = fs.readFileSync(data, "utf8");
+
+      if (action === "parse") {
+        const rows = text.split(/\r?\n/).filter((r) => r.trim() !== "");
+        if (rows.length < 2) throw new McpToolError("CSV 需至少包含表头 + 1 行数据", "INVALID");
+        const headers = rows[0].split(delimiter).map((h) => h.trim());
+        const result = rows.slice(1).map((row) => {
+          const cells = row.split(delimiter);
+          const obj: Record<string, string> = {};
+          headers.forEach((h, i) => { obj[h] = cells[i]?.trim() ?? ""; });
+          return obj;
+        });
+        return JSON.stringify({ headers, rows: result, count: result.length }, null, 2);
+      }
+      // to_csv：JSON 数组 → CSV
+      let arr: any[];
+      try {
+        arr = JSON.parse(text);
+      } catch {
+        throw new McpToolError("to_csv 需要 JSON 数组字符串", "INVALID");
+      }
+      if (!Array.isArray(arr) || arr.length === 0) throw new McpToolError("JSON 需为非空数组", "INVALID");
+      const headers = Object.keys(arr[0]);
+      const escape = (v: any) => {
+        const s = String(v ?? "");
+        return /[,\"\n]/.test(s) ? `\"${s.replace(/\"/g, "\"\"")}\"` : s;
+      };
+      const csv = [headers.join(delimiter), ...arr.map((o) => headers.map((h) => escape(o[h])).join(delimiter))].join("\n");
+      return JSON.stringify({ csv, rows: arr.length }, null, 2);
+    }),
+  );
 }
